@@ -171,7 +171,7 @@ plot_protein_lolliplot <- function(variants,
   p <- p + facet_wrap(~variant_type, ncol = 1)
 
   # theme
-  p <- p +
+p <- p +
     theme_minimal() +
     labs(
       title = paste(meta$gene$name, "- Protein Variants"),
@@ -180,15 +180,17 @@ plot_protein_lolliplot <- function(variants,
     ) +
     theme(
       legend.position = "bottom",
-      legend.title = element_text(size = 8),
-      legend.text = element_text(size = 7),
-      legend.key.size = unit(0.3, "cm"),
-      legend.spacing.x = unit(0.2, "cm"),
-      legend.spacing.y = unit(0.1, "cm")
+      legend.title = element_text(size = 7, face = "bold"),
+      legend.text = element_text(size = 6),
+      legend.key.size = unit(0.25, "cm"),
+      legend.spacing.x = unit(0.1, "cm"),
+      legend.spacing.y = unit(0.05, "cm"),
+      legend.box = "horizontal",
+      legend.margin = margin(t = 2, b = 2)
     ) +
     guides(
-      fill = guide_legend(ncol = 2),
-      color = guide_legend(ncol = 2)
+      fill  = guide_legend(ncol = 3, title.position = "top"),
+      color = guide_legend(ncol = 3, title.position = "top")
     )
 
   return(p)
