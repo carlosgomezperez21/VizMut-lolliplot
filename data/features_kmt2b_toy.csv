@@ -1,0 +1,33 @@
+feature_type,feature_name,start,end 
+domain,Bromo,1404,1504
+domain,FYR N-terminal,1727,1783
+domain,FYR C-terminal,2411,2492
+domain,SET,2575,2691
+domain,Post-SET,2699,2715
+motif,Menin-binding motif (MBM),17,36
+motif,WDR5 interaction motif (WIN),2508,2513
+ptm,N-acetylalanine,2,2
+ptm,Phosphoserine,113,113
+ptm,Phosphoserine,114,114
+ptm,Phosphoserine,118,118
+ptm,Phosphoserine,351,351
+ptm,Phosphoserine,821,821
+ptm,Phosphoserine,844,844
+ptm,Phosphoserine,861,861
+ptm,Phosphoserine,936,936
+ptm,Phosphoserine,1032,1032
+ptm,Phosphoserine,1035,1035
+ptm,Phosphoserine,1092,1092
+ptm,Phosphoserine,1095,1095
+ptm,Phosphoserine,1930,1930
+ptm,Phosphoserine,1936,1936
+ptm,Phosphothreonine,2068,2068
+ptm,Phosphothreonine,2083,2083
+ptm,Phosphoserine,2288,2288
+ptm,Phosphoserine,2348,2348
+Zinc finger,CXXC-type,959,1006
+Zinc finger,PHD-type 1,1201,1252
+Zinc finger,PHD-type 2,1249,1303
+Zinc finger,PHD-type 3,1335,1396
+Zinc finger,C2HC pre-PHD-type,1578,1618
+Zinc finger,PHD-type 4,1639,1686
