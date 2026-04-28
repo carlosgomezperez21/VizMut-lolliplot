@@ -78,7 +78,7 @@ jobs:
             --output output/lolliplot_gene.png
 
       - name: Upload plots
-        uses: actions/upload-artifact@v4.2.2
+        uses: actions/upload-artifact@v4
         with:
           name: lolliplots
           path: |
