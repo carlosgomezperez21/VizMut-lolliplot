@@ -62,8 +62,8 @@ jobs:
           Rscript main.R \
             --variants data/variant_kmt2b_toy.csv \
             --features data/features_kmt2b_toy.csv \
-            --plot-type protein \
-            --gene-name KMT2B \
+            --plot_type protein \
+            --gene_name KMT2B \
             --protein-length 2715 \
             --output output/lolliplot_protein.png
 
@@ -71,9 +71,9 @@ jobs:
         run: |
           Rscript main.R \
             --variants data/variant_kmt2b_toy.csv \
-            --plot-type single_gene \
-            --gene-name KMT2B \
-            --transcript-id NM_014727.3 \
+            --plot_type single_gene \
+            --gene_name KMT2B \
+            --transcript_id NM_014727.3 \
             --genome hg38 \
             --output output/lolliplot_gene.png
 

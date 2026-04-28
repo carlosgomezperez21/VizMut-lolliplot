@@ -15,22 +15,22 @@ option_list <- list(
               default = NULL,
               help    = "Ruta al CSV de features (requerido para --plot-type protein)"),
 
-  make_option("--plot-type",
+  make_option("--plot_type",
               type    = "character",
               default = "protein",
               help    = "Tipo de plot: protein | single_gene | multi_gene [default: %default]"),
 
-  make_option("--gene-name",
+  make_option("--gene_name",
               type    = "character",
               default = "GENE",
               help    = "Nombre del gen [default: %default]"),
 
-  make_option("--protein-length",
+  make_option("--protein_length",
               type    = "integer",
               default = NULL,
               help    = "Longitud de la proteina en aa (requerido para --plot-type protein)"),
 
-  make_option("--transcript-id",
+  make_option("--transcript_id",
               type    = "character",
               default = NULL,
               help    = "RefSeq transcript ID (ej. NM_014727.3) para single_gene y multi_gene"),
@@ -45,7 +45,7 @@ option_list <- list(
               default = FALSE,
               help    = "Dividir plot por variant_type: TRUE | FALSE [default: %default]"),
 
-  make_option("--label-type",
+  make_option("--label_type",
               type    = "character",
               default = "protein",
               help    = "Tipo de etiqueta en lollipops: protein | cds [default: %default]"),
@@ -64,10 +64,10 @@ opt <- parse_args(OptionParser(option_list = option_list))
 if (is.null(opt$variants)) stop("--variants es requerido")
 if (!file.exists(opt$variants)) stop("No se encuentra: ", opt$variants)
 
-plot_type <- opt$`plot-type`
+plot_type <- opt$`plot_type`
 
 if (!plot_type %in% c("protein", "single_gene", "multi_gene")) {
-  stop("--plot-type debe ser: protein | single_gene | multi_gene")
+  stop("--plot_type debe ser: protein | single_gene | multi_gene")
 }
 
 if (!opt$genome %in% c("hg38", "hg19")) {
@@ -89,9 +89,9 @@ variants     <- parse_variants(variants_raw)
 #---------------------------
 if (plot_type == "protein") {
 
-  if (is.null(opt$features)) stop("--features es requerido para --plot-type protein")
+  if (is.null(opt$features)) stop("--features es requerido para --plot_type protein")
   if (!file.exists(opt$features)) stop("No se encuentra: ", opt$features)
-  if (is.null(opt$`protein-length`)) stop("--protein-length es requerido para --plot-type protein")
+  if (is.null(opt$`protein-length`)) stop("--protein_length es requerido para --plot_type protein")
 
   source("R/parse_features.R")
   source("R/plot_lolliplot.R")
@@ -101,7 +101,7 @@ if (plot_type == "protein") {
   features     <- parse_features(features_raw)
 
   meta <- list(
-    gene    = list(name   = opt$`gene-name`,
+    gene    = list(name   = opt$`gene_name`,
                    chr    = unique(variants$chr)[1],
                    start  = min(variants$pos, na.rm = TRUE),
                    end    = max(variants$pos, na.rm = TRUE),
@@ -123,7 +123,7 @@ if (plot_type == "protein") {
 if (plot_type == "single_gene") {
 
   if (is.null(opt$`transcript-id`)) {
-    stop("--transcript-id es requerido para --plot-type single_gene")
+    stop("--transcript_id es requerido para --plot_type single_gene")
   }
 
   source("R/fetch_transcript.R")
@@ -162,8 +162,8 @@ if (plot_type == "single_gene") {
     message("Liftover completado")
   }
 
-  message("Obteniendo estructura del transcrito: ", opt$`transcript-id`)
-  struct <- fetch_transcript_structure(opt$`transcript-id`)
+  message("Obteniendo estructura del transcrito: ", opt$`transcript_id`)
+  struct <- fetch_transcript_structure(opt$`transcript_id`)
 
   # filtrar variantes dentro del transcrito
   tx_start    <- min(struct$start)
@@ -181,8 +181,8 @@ if (plot_type == "single_gene") {
   p <- plot_gene_lolliplot(
     variants             = variants_in,
     transcript_structure = struct,
-    gene_name            = opt$`gene-name`,
-    label_type           = opt$`label-type`,
+    gene_name            = opt$`gene_name`,
+    label_type           = opt$`label_type`,
     grid                 = opt$grid
   )
 }
