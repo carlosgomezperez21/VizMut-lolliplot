@@ -34,7 +34,7 @@ jobs:
             libtiff5-dev \
             libjpeg-dev
 
-      - name: Install R packages
+      - name: Install CRAN packages
         run: |
           install.packages(c(
             'optparse',
@@ -43,21 +43,44 @@ jobs:
             'ggplot2',
             'ggrepel',
             'RColorBrewer',
-            'ggnewscale'
+            'ggnewscale',
+            'httr',
+            'jsonlite',
+            'xml2',
+            'R.utils'
           ), repos = 'https://cloud.r-project.org')
         shell: Rscript {0}
 
-      - name: Run pipeline
+      - name: Install Bioconductor packages
+        run: |
+          install.packages('BiocManager', repos = 'https://cloud.r-project.org')
+          BiocManager::install(c('rtracklayer', 'GenomicRanges'), ask = FALSE)
+        shell: Rscript {0}
+
+      - name: Run pipeline - protein plot
         run: |
           Rscript main.R \
             --variants data/variant_kmt2b_toy.csv \
             --features data/features_kmt2b_toy.csv \
-            --gene KMT2B \
-            --protein_length 2715 \
-            --output output/lolliplot.png
+            --plot-type protein \
+            --gene-name KMT2B \
+            --protein-length 2715 \
+            --output output/lolliplot_protein.png
 
-      - name: Upload plot
+      - name: Run pipeline - gene structure plot
+        run: |
+          Rscript main.R \
+            --variants data/variant_kmt2b_toy.csv \
+            --plot-type single_gene \
+            --gene-name KMT2B \
+            --transcript-id NM_014727.3 \
+            --genome hg38 \
+            --output output/lolliplot_gene.png
+
+      - name: Upload plots
         uses: actions/upload-artifact@v4
         with:
-          name: lolliplot
-          path: output/lolliplot.png
+          name: lolliplots
+          path: |
+            output/lolliplot_protein.png
+            output/lolliplot_gene.png
