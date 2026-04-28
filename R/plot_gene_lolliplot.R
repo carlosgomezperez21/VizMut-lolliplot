@@ -145,17 +145,25 @@ plot_gene_lolliplot <- function(variants,
   #---------------------------
   # Lollipops de variantes
   #---------------------------
+
+  # apilar variantes en la misma posicion genomica
+  variants <- variants %>%
+    group_by(pos) %>%
+    mutate(stack = seq_len(n()) - 1) %>%
+    ungroup() %>%
+    mutate(y_top = 1 + stack * 0.3)
+
   p <- p +
     geom_segment(data = variants,
                  aes(x = pos, xend = pos,
-                     y = 0.25, yend = 1,
+                     y = 0.25, yend = y_top,
                      color = ACMG),
-                 linewidth = 0.8) +
+                 linewidth = 0.6) +
 
     geom_point(data = variants,
-               aes(x = pos, y = 1,
+               aes(x = pos, y = y_top,
                    color = ACMG),
-               size = 3) +
+               size = 2.5) +
 
     scale_color_manual(values = acmg_colors, name = "ACMG")
 
@@ -165,9 +173,11 @@ plot_gene_lolliplot <- function(variants,
   p <- p +
     geom_text_repel(
       data = variants %>% filter(ACMG %in% c("P", "LP")),
-      aes(x = pos, y = 1, label = label),
+      aes(x = pos, y = y_top, label = label),
       size = 2,
-      min.segment.length = 0
+      min.segment.length = 0,
+      box.padding = 0.4,
+      nudge_y = 0.2
     )
 
   #---------------------------
