@@ -64,7 +64,7 @@ jobs:
             --features data/features_kmt2b_toy.csv \
             --plot_type protein \
             --gene_name KMT2B \
-            --protein-length 2715 \
+            --protein_length 2715 \
             --output output/lolliplot_protein.png
 
       - name: Run pipeline - gene structure plot
