@@ -64,7 +64,7 @@ opt <- parse_args(OptionParser(option_list = option_list))
 if (is.null(opt$variants)) stop("--variants es requerido")
 if (!file.exists(opt$variants)) stop("No se encuentra: ", opt$variants)
 
-plot_type <- opt$`plot_type`
+plot_type <- opt$plot_type
 
 if (!plot_type %in% c("protein", "single_gene", "multi_gene")) {
   stop("--plot_type debe ser: protein | single_gene | multi_gene")
@@ -91,7 +91,7 @@ if (plot_type == "protein") {
 
   if (is.null(opt$features)) stop("--features es requerido para --plot_type protein")
   if (!file.exists(opt$features)) stop("No se encuentra: ", opt$features)
-  if (is.null(opt$`protein-length`)) stop("--protein_length es requerido para --plot_type protein")
+  if (is.null(opt$protein_length)) stop("--protein_length es requerido para --plot_type protein")
 
   source("R/parse_features.R")
   source("R/plot_lolliplot.R")
@@ -101,13 +101,13 @@ if (plot_type == "protein") {
   features     <- parse_features(features_raw)
 
   meta <- list(
-    gene    = list(name   = opt$`gene_name`,
+    gene    = list(name   = opt$gene_name,
                    chr    = unique(variants$chr)[1],
                    start  = min(variants$pos, na.rm = TRUE),
                    end    = max(variants$pos, na.rm = TRUE),
                    strand = "+"),
-    protein = list(id     = opt$`gene-name`,
-                   length = opt$`protein-length`)
+    protein = list(id     = opt$gene_name,
+                   length = opt$protein_length)
   )
 
   message("Validando variantes...")
@@ -122,7 +122,7 @@ if (plot_type == "protein") {
 #---------------------------
 if (plot_type == "single_gene") {
 
-  if (is.null(opt$`transcript-id`)) {
+  if (is.null(opt$transcript_id)) {
     stop("--transcript_id es requerido para --plot_type single_gene")
   }
 
@@ -162,8 +162,8 @@ if (plot_type == "single_gene") {
     message("Liftover completado")
   }
 
-  message("Obteniendo estructura del transcrito: ", opt$`transcript_id`)
-  struct <- fetch_transcript_structure(opt$`transcript_id`)
+  message("Obteniendo estructura del transcrito: ", opt$transcript_id)
+  struct <- fetch_transcript_structure(opt$transcript_id)
 
   # filtrar variantes dentro del transcrito
   tx_start    <- min(struct$start)
@@ -181,8 +181,8 @@ if (plot_type == "single_gene") {
   p <- plot_gene_lolliplot(
     variants             = variants_in,
     transcript_structure = struct,
-    gene_name            = opt$`gene_name`,
-    label_type           = opt$`label_type`,
+    gene_name            = opt$gene_name,
+    label_type           = opt$label_type,
     grid                 = opt$grid
   )
 }
