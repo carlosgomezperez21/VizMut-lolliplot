@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Setup R
-        uses: r-lib/actions/setup-r@v2
+        uses: r-lib/actions/setup-r@v2.11.0
         with:
           r-version: '4.3.0'
 
@@ -78,7 +78,7 @@ jobs:
             --output output/lolliplot_gene.png
 
       - name: Upload plots
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.2.2
         with:
           name: lolliplots
           path: |
