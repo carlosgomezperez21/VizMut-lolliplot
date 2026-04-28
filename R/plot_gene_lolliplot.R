@@ -7,11 +7,14 @@
 #' @param grid logical, dividir por variant_type
 #' @return ggplot object
 
+
 plot_gene_lolliplot <- function(variants,
                                 transcript_structure,
-                                gene_name = "Gene",
+                                gene_name  = "Gene",
                                 label_type = "protein",
-                                grid = FALSE) {
+                                grid       = FALSE,
+                                cytobands  = NULL) {
+
 
   library(ggplot2)
   library(dplyr)
@@ -208,6 +211,31 @@ plot_gene_lolliplot <- function(variants,
       legend.text  = element_text(size = 6),
       legend.key.size = unit(0.25, "cm")
     )
+
+  #---------------------------
+  # Combinar con ideograma
+  #---------------------------
+  if (!is.null(cytobands)) {
+
+    library(patchwork)
+
+    source("R/plot_ideogram.R")
+
+    chr       <- unique(transcript_structure$chr)[1]
+    gene_start <- min(transcript_structure$start)
+    gene_end   <- max(transcript_structure$end)
+
+    p_ideo <- plot_ideogram(
+      cytobands  = cytobands,
+      gene_start = gene_start,
+      gene_end   = gene_end,
+      chrom      = chr,
+      gene_name  = gene_name
+    )
+
+    p <- p_ideo / p +
+      plot_layout(heights = c(1, 4))
+  }
 
   return(p)
 }
