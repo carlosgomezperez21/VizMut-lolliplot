@@ -111,11 +111,11 @@ plot_ideogram <- function(cytobands,
 
     scale_y_continuous(limits = c(-0.4, 1.6)) +
 
-    theme_void() +
+theme_void() +
     theme(
-      axis.text.x  = element_text(size = 7, color = "gray40"),
+      axis.text.x  = element_text(size = 8, color = "gray40"),
       axis.ticks.x = element_line(color = "gray40"),
-      plot.margin  = margin(5, 10, 5, 10)
+      plot.margin  = margin(8, 15, 0, 15)
     )
 
   return(p)

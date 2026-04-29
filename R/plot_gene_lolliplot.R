@@ -5,8 +5,8 @@
 #' @param gene_name nombre del gen para el título
 #' @param label_type "protein" (p.) o "cds" (c.) para etiquetas
 #' @param grid logical, dividir por variant_type
+#' @param cytobands data.frame de fetch_cytobands() o NULL
 #' @return ggplot object
-
 
 plot_gene_lolliplot <- function(variants,
                                 transcript_structure,
@@ -14,7 +14,6 @@ plot_gene_lolliplot <- function(variants,
                                 label_type = "protein",
                                 grid       = FALSE,
                                 cytobands  = NULL) {
-
 
   library(ggplot2)
   library(dplyr)
@@ -50,7 +49,7 @@ plot_gene_lolliplot <- function(variants,
   variants$ACMG <- as.character(variants$ACMG)
   variants <- variants[!is.na(variants$pos), ]
 
-  # etiqueta según disponibilidad de columnas
+  # etiqueta segun disponibilidad de columnas
   if (label_type == "cds" && "hgvs_c" %in% names(variants)) {
     variants$label <- ifelse(!is.na(variants$hgvs_c),
                              variants$hgvs_c, variants$variant_id)
@@ -61,24 +60,10 @@ plot_gene_lolliplot <- function(variants,
     variants$label <- variants$variant_id
   }
 
-  # etiqueta según disponibilidad de columnas
-  if (label_type == "cds" && "hgvs_c" %in% names(variants)) {
-    variants <- variants %>%
-      mutate(label = ifelse(!is.na(hgvs_c), hgvs_c, variant_id))
-  } else if (!is.na(match("protein_change", names(variants)))) {
-    variants <- variants %>%
-      mutate(label = ifelse(!is.na(protein_change), protein_change, variant_id))
-  } else {
-    variants <- variants %>%
-      mutate(label = variant_id)
-  }
-
-  #--------------------------
+  #---------------------------
   # Base plot
   #---------------------------
   p <- ggplot() +
-
-    # línea base del gen
     annotate("segment",
              x = gene_start, xend = gene_end,
              y = 0, yend = 0,
@@ -112,10 +97,9 @@ plot_gene_lolliplot <- function(variants,
   }
 
   #---------------------------
-  # Intrones (línea delgada con dirección)
+  # Intrones
   #---------------------------
   if (nrow(introns) > 0) {
-
     introns <- introns %>%
       mutate(mid = (start + end) / 2)
 
@@ -148,8 +132,6 @@ plot_gene_lolliplot <- function(variants,
   #---------------------------
   # Lollipops de variantes
   #---------------------------
-
-  # apilar variantes en la misma posicion genomica
   variants <- variants %>%
     group_by(pos) %>%
     mutate(stack = seq_len(n()) - 1) %>%
@@ -195,21 +177,31 @@ plot_gene_lolliplot <- function(variants,
   #---------------------------
   p <- p +
     theme_minimal() +
+    scale_x_continuous(labels = scales::comma) +
+    scale_y_continuous(labels = NULL) +
     labs(
       title = paste(gene_name, "- Gene Structure & Variants"),
-      x = "Genomic position",
-      y = ""
+      x     = "Genomic position",
+      y     = ""
     ) +
-    scale_x_continuous(labels = scales::comma) +
     theme(
-      axis.text.y  = element_blank(),
-      axis.ticks.y = element_blank(),
+      axis.text.y        = element_blank(),
+      axis.ticks.y       = element_blank(),
+      axis.text.x        = element_text(size = 9),
+      axis.title.x       = element_text(size = 11, face = "bold"),
+      axis.title.y       = element_blank(),
+      plot.title         = element_text(size = 13, face = "bold"),
+      panel.background   = element_rect(fill = "white", color = NA),
+      plot.background    = element_rect(fill = "white", color = NA),
       panel.grid.major.y = element_blank(),
       panel.grid.minor.y = element_blank(),
-      legend.position = "bottom",
-      legend.title = element_text(size = 7, face = "bold"),
-      legend.text  = element_text(size = 6),
-      legend.key.size = unit(0.25, "cm")
+      panel.grid.major.x = element_line(color = "gray90"),
+      panel.grid.minor.x = element_blank(),
+      legend.position    = "bottom",
+      legend.title       = element_text(size = 8, face = "bold"),
+      legend.text        = element_text(size = 7),
+      legend.key.size    = unit(0.3, "cm"),
+      plot.margin        = margin(10, 15, 10, 15)
     )
 
   #---------------------------
@@ -218,10 +210,9 @@ plot_gene_lolliplot <- function(variants,
   if (!is.null(cytobands)) {
 
     library(patchwork)
-
     source("R/plot_ideogram.R")
 
-    chr       <- unique(transcript_structure$chr)[1]
+    chr        <- unique(transcript_structure$chr)[1]
     gene_start <- min(transcript_structure$start)
     gene_end   <- max(transcript_structure$end)
 

@@ -35,7 +35,12 @@ option_list <- list(
               default = NULL,
               help    = "RefSeq transcript ID (ej. NM_014727.3) para single_gene y multi_gene"),
 
-  make_option("--genome",
+make_option("--gene_list",
+              type    = "character",
+              default = "all",
+              help    = "Genes a plotear: 'all', lista 'KMT2B,DNMT3A' o ruta a archivo .txt [default: %default]"), 
+
+ make_option("--genome",
               type    = "character",
               default = "hg38",
               help    = "Ensamble genomico del CSV de variantes: hg38 | hg19 [default: %default]"),
@@ -190,8 +195,65 @@ if (plot_type == "single_gene") {
 #---------------------------
 # Plot tipo: multi_gene (Fase 3)
 #---------------------------
+
 if (plot_type == "multi_gene") {
-  stop("--plot-type multi_gene estara disponible en la Fase 3")
+
+  source("R/plot_multi_gene.R")
+
+  #---------------------------
+  # parsear gene_list
+  #---------------------------
+  if (is.null(opt$gene_list) || opt$gene_list == "all") {
+    gene_list <- "all"
+  } else if (file.exists(opt$gene_list)) {
+    message("Leyendo lista de genes desde: ", opt$gene_list)
+    gene_list <- trimws(readLines(opt$gene_list))
+    gene_list <- gene_list[nchar(gene_list) > 0]
+    message("Genes en archivo: ", paste(gene_list, collapse=", "))
+  } else {
+    gene_list <- trimws(strsplit(opt$gene_list, ",")[[1]])
+    message("Genes especificados: ", paste(gene_list, collapse=", "))
+  }
+
+  # liftover si datos en hg19
+  if (opt$genome == "hg19") {
+    message("Detectado --genome hg19, realizando liftover a hg38...")
+    library(rtracklayer)
+    library(GenomicRanges)
+
+    chain_file <- "/tmp/hg19ToHg38.over.chain"
+    chain_gz   <- paste0(chain_file, ".gz")
+
+    if (!file.exists(chain_file)) {
+      message("Descargando chain file...")
+      download.file(
+        "https://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz",
+        chain_gz, quiet = TRUE
+      )
+      R.utils::gunzip(chain_gz, destname = chain_file, remove = FALSE)
+    }
+
+    chain   <- import.chain(chain_file)
+    valid   <- !is.na(variants$pos)
+    gr_hg19 <- GRanges(
+      seqnames = variants$chr[valid],
+      ranges   = IRanges(start = variants$pos[valid],
+                         end   = variants$pos[valid])
+    )
+    gr_hg38 <- liftOver(gr_hg19, chain)
+    lifted  <- sapply(gr_hg38, function(x) if (length(x) == 1) start(x) else NA)
+    variants$pos[valid] <- lifted
+    message("Liftover completado")
+  }
+
+  message("Generando plot multi-gen...")
+  p <- plot_multi_gene(
+    variants   = variants,
+    gene_list  = gene_list,
+    genome     = opt$genome,
+    grid       = opt$grid,
+    label_type = opt$label_type
+  )
 }
 
 #---------------------------
@@ -199,5 +261,23 @@ if (plot_type == "multi_gene") {
 #---------------------------
 message("Guardando output en: ", opt$output)
 dir.create(dirname(opt$output), showWarnings = FALSE, recursive = TRUE)
-ggplot2::ggsave(opt$output, p, width = 14, height = 6, dpi = 150)
-message("Listo!")
+
+# alto dinamico segun plot_type y numero de genes
+plot_height <- switch(plot_type,
+  "protein"     = 6,
+  "single_gene" = 7,
+  "multi_gene"  = {
+    n_genes <- if (identical(gene_list, "all")) {
+      length(unique(variants$gene))
+    } else {
+      length(gene_list)
+    }
+    n_genes * 7
+  }
+)
+
+ggplot2::ggsave(opt$output, p,
+                width  = 14,
+                height = plot_height,
+                dpi    = 150,
+                limitsize = FALSE)
