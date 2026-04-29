@@ -53,7 +53,7 @@ plot_ideogram <- function(cytobands,
              ymin = 0.1, ymax = 0.9,
              fill  = "#FF6B35",
              color = "#CC3300",
-             alpha = 0.8,
+             alpha = 0.6,
              linewidth = 0.5) +
 
     # líneas de delimitación del gen
@@ -74,26 +74,30 @@ plot_ideogram <- function(cytobands,
     # etiqueta del gen
     annotate("text",
              x     = (gene_start + gene_end) / 2,
-             y     = 1.3,
+             y     = 1.55,
              label = gene_name,
              size  = 3,
              fontface = "bold",
              color = "#CC3300") +
 
-    # posiciones genomicas
+    # posiciones genomicas del gen
+    # posicion inicio (arriba de la barra)
     annotate("text",
-             x = gene_start, y = -0.2,
+             x     = gene_start,
+             y     = 1.25,
              label = scales::comma(gene_start),
-             size  = 2.5,
-             color = "gray30",
+             size  = 2,
+             color = "#CC3300",
              hjust = 0.5) +
 
+    # posicion fin (abajo de la barra)
     annotate("text",
-             x = gene_end, y = -0.2,
+             x     = gene_end,
+             y     = -0.3,
              label = scales::comma(gene_end),
-             size  = 2.5,
-             color = "gray30",
-             hjust = 0.5) +
+             size  = 2,
+             color = "#CC3300",
+             hjust = 0.5)+
 
     # nombre del cromosoma
     annotate("text",
@@ -109,7 +113,7 @@ plot_ideogram <- function(cytobands,
       labels = function(x) paste0(round(x/1e6, 0), "Mb")
     ) +
 
-    scale_y_continuous(limits = c(-0.4, 1.6)) +
+    scale_y_continuous(limits = c(-0.55, 1.8)) +
 
 theme_void() +
     theme(
