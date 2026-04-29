@@ -136,7 +136,7 @@ plot_gene_lolliplot <- function(variants,
     group_by(pos) %>%
     mutate(stack = seq_len(n()) - 1) %>%
     ungroup() %>%
-    mutate(y_top = 1 + stack * 0.3)
+    mutate(y_top = 1 + stack * 0.15)
 
   p <- p +
     geom_segment(data = variants,

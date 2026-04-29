@@ -45,7 +45,8 @@ fetch_variants_clinvar <- function(gene_symbol,
     "?terms=", utils::URLencode(transcript_id, reserved = TRUE),
     "&maxList=", max_results,
     "&ef=HGVS_c,HGVS_p,Chromosome,Start,Stop,",
-    "ReferenceAllele,AlternateAllele,Type,AminoAcidChange"
+    "ReferenceAllele,AlternateAllele,Type,AminoAcidChange,",
+    "ClinicalSignificance,PhenotypeList,dbSNP"
   )
 
   resp <- GET(url)
@@ -84,7 +85,13 @@ fetch_variants_clinvar <- function(gene_symbol,
     variant_type   = sapply(seq_len(n), function(i)
                        safe_get(extras$Type, i)),
     protein_change = sapply(seq_len(n), function(i)
-                       safe_get(extras$AminoAcidChange, i))
+                       safe_get(extras$AminoAcidChange, i)),
+    clinsig        = sapply(seq_len(n), function(i)
+                       safe_get(extras$ClinicalSignificance, i)),
+    phenotype      = sapply(seq_len(n), function(i)
+                       safe_get(extras$PhenotypeList, i)),
+    dbsnp          = sapply(seq_len(n), function(i)
+                       safe_get(extras$dbSNP, i))
   ) %>%
     mutate(
       ref = ifelse(ref == "na" | ref == "", NA, ref),
@@ -92,6 +99,22 @@ fetch_variants_clinvar <- function(gene_symbol,
       gene = gene_symbol
     )
 
+#---------------------------
+  # Mapeo ClinicalSignificance -> ACMG
+  #---------------------------
+  result <- result %>%
+    mutate(
+      ACMG = case_when(
+        grepl("^Pathogenic$", clinsig, ignore.case=TRUE)                    ~ "P",
+        grepl("Pathogenic/Likely pathogenic", clinsig, ignore.case=TRUE)    ~ "LP",
+        grepl("^Likely pathogenic$", clinsig, ignore.case=TRUE)             ~ "LP",
+        grepl("^Uncertain significance$", clinsig, ignore.case=TRUE)        ~ "VUS",
+        grepl("^Likely benign$", clinsig, ignore.case=TRUE)                 ~ "LB",
+        grepl("Benign/Likely benign", clinsig, ignore.case=TRUE)            ~ "LB",
+        grepl("^Benign$", clinsig, ignore.case=TRUE)                        ~ "B",
+        TRUE                                                                 ~ "VUS"
+      )
+    )
   #---------------------------
   # 4. Liftover hg19 -> hg38
   #---------------------------
@@ -124,7 +147,8 @@ fetch_variants_clinvar <- function(gene_symbol,
 
   result <- result %>%
     select(hgvs_c, hgvs_p, chr, pos, ref, alt,
-           variant_type, protein_change, gene) %>%
+           variant_type, protein_change, clinsig,
+           ACMG, phenotype, dbsnp, gene) %>%
     filter(!is.na(pos))
 
   return(result)

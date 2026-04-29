@@ -99,7 +99,7 @@ if (plot_type == "protein") {
   if (is.null(opt$protein_length)) stop("--protein_length es requerido para --plot_type protein")
 
   source("R/parse_features.R")
-  source("R/plot_lolliplot.R")
+  source("R/plot_protein_lolliplot.R")
 
   message("Parseando features...")
   features_raw <- read.csv(opt$features)
@@ -119,7 +119,7 @@ if (plot_type == "protein") {
   validate_variants(variants, meta)
 
   message("Generando plot proteico...")
-  p <- plot_protein_lolliplot(variants, features, meta)
+  p <- plot_protein_lolliplot(variants, features, meta, grid = opt$grid)
 }
 
 #---------------------------
