@@ -12,4 +12,6 @@ renv/staging/
 # outputs generados
 output/
 *.png
-*.pdf
+
+# excepciones - ejemplos para el README
+!examples/*.png

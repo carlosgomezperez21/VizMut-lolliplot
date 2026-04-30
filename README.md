@@ -4,6 +4,20 @@ A command-line pipeline for visualizing protein and genomic variants as lolliplo
 
 ---
 
+## Examples
+
+### Protein lolliplot
+![Protein lolliplot](examples/protein_lolliplot.png)
+
+### Single gene lolliplot
+![Gene lolliplot](examples/gene_lolliplot.png)
+
+### Multi-gene lolliplot
+![Multi-gene lolliplot](examples/multigene_lolliplot.png)
+
+---
+
+
 ## Features
 
 - **Protein lolliplot** — variants mapped to protein sequence with functional domains, motifs, PTMs and zinc fingers
