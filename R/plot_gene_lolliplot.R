@@ -52,7 +52,8 @@ plot_gene_lolliplot <- function(variants,
   # etiqueta segun disponibilidad de columnas
   if (label_type == "cds" && "hgvs_c" %in% names(variants)) {
     variants$label <- ifelse(!is.na(variants$hgvs_c),
-                             variants$hgvs_c, variants$variant_id)
+                             sub(".*:", "", variants$hgvs_c),
+                             variants$variant_id)
   } else if ("protein_change" %in% names(variants)) {
     variants$label <- ifelse(!is.na(variants$protein_change),
                              variants$protein_change, variants$variant_id)

@@ -125,6 +125,12 @@ if (plot_type == "protein") {
 #---------------------------
 # Plot tipo: single_gene
 #---------------------------
+# en plots genomicos el default de label es cds
+  if (opt$label_type == "protein") {
+    message("Nota: usando label_type=cds para plot genomico")
+    opt$label_type <- "cds"
+  }
+
 if (plot_type == "single_gene") {
 
   if (is.null(opt$transcript_id)) {
@@ -167,8 +173,21 @@ if (plot_type == "single_gene") {
     message("Liftover completado")
   }
 
-  message("Obteniendo estructura del transcrito: ", opt$transcript_id)
+# obtener citobandas para ideograma
+message("Obteniendo estructura del transcrito: ", opt$transcript_id)
   struct <- fetch_transcript_structure(opt$transcript_id)
+
+  message("Obteniendo citobandas...")
+  source("R/fetch_cytobands.R")
+  source("R/plot_ideogram.R")
+  chr   <- unique(struct$chr)[1]
+  bands <- tryCatch(
+    fetch_cytobands(chr),
+    error = function(e) {
+      message("Warning: no se pudieron obtener citobandas: ", e$message)
+      NULL
+    }
+  )
 
   # filtrar variantes dentro del transcrito
   tx_start    <- min(struct$start)
@@ -183,12 +202,13 @@ if (plot_type == "single_gene") {
   }
 
   message("Generando plot genomico...")
-  p <- plot_gene_lolliplot(
+p <- plot_gene_lolliplot(
     variants             = variants_in,
     transcript_structure = struct,
     gene_name            = opt$gene_name,
     label_type           = opt$label_type,
-    grid                 = opt$grid
+    grid                 = opt$grid,
+    cytobands            = bands
   )
 }
 
