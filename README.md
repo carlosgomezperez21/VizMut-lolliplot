@@ -4,20 +4,6 @@ A command-line pipeline for visualizing protein and genomic variants as lolliplo
 
 ---
 
-## Examples
-
-### Protein lolliplot
-![Protein lolliplot](examples/protein_lolliplot.png)
-
-### Single gene lolliplot
-![Gene lolliplot](examples/gene_lolliplot.png)
-
-### Multi-gene lolliplot
-![Multi-gene lolliplot](examples/multigene_lolliplot.png)
-
----
-
-
 ## Features
 
 - **Protein lolliplot** — variants mapped to protein sequence with functional domains, motifs, PTMs and zinc fingers
@@ -35,7 +21,6 @@ A command-line pipeline for visualizing protein and genomic variants as lolliplo
 ### Requirements
 
 - R >= 4.1.0
-- The following R packages:
 
 ```r
 # CRAN
@@ -100,7 +85,32 @@ Rscript main.R \
   --output output/lolliplot_protein.png
 ```
 
+![Protein lolliplot](examples/protein_lolliplot.png)
+
+---
+
+### Protein lolliplot with grid (`--grid TRUE`)
+
+Split the plot by variant type for a clearer view of each category.
+
+```bash
+Rscript main.R \
+  --variants data/variant_kmt2b_toy.csv \
+  --features data/features_kmt2b_toy.csv \
+  --plot_type protein \
+  --gene_name KMT2B \
+  --protein_length 2715 \
+  --grid TRUE \
+  --output output/lolliplot_protein_grid.png
+```
+
+![Protein grid lolliplot](examples/protein_grid_lolliplot.png)
+
+---
+
 ### Single gene lolliplot
+
+Variants mapped to genomic coordinates with exon/intron structure and chromosomal ideogram. Transcript structure is automatically retrieved from NCBI.
 
 ```bash
 Rscript main.R \
@@ -112,7 +122,13 @@ Rscript main.R \
   --output output/lolliplot_gene.png
 ```
 
+![Gene lolliplot](examples/gene_lolliplot.png)
+
+---
+
 ### Multi-gene lolliplot
+
+Plot multiple genes in a single figure. Each gene gets its own ideogram and genomic structure. The canonical transcript is automatically retrieved from NCBI for each gene.
 
 ```bash
 # All genes in the CSV
@@ -140,6 +156,8 @@ Rscript main.R \
   --output output/lolliplot_multigene.png
 ```
 
+![Multi-gene lolliplot](examples/multigene_lolliplot.png)
+
 ---
 
 ## All flags
@@ -160,34 +178,13 @@ Rscript main.R \
 
 ---
 
-## Project structure
-VizMut-lolliplot/
-├── R/
-│   ├── parse_variants.R              # Parse variant CSV
-│   ├── parse_features.R              # Parse features CSV
-│   ├── validate.R                    # Validate variants against gene boundaries
-│   ├── plot_protein_lolliplot.R      # Protein lolliplot
-│   ├── fetch_transcript.R            # Fetch transcript structure from NCBI
-│   ├── fetch_canonical_transcript.R  # Fetch canonical transcript by gene symbol
-│   ├── fetch_cytobands.R             # Fetch cytogenetic bands from UCSC
-│   ├── hgvs_to_genomic.R             # Fetch variants from ClinVar + liftover
-│   ├── plot_gene_lolliplot.R         # Gene structure lolliplot
-│   ├── plot_ideogram.R               # Chromosomal ideogram
-│   └── plot_multi_gene.R             # Multi-gene lolliplot
-├── data/
-│   ├── variant_kmt2b_toy.csv         # Toy variant file (KMT2B)
-│   ├── features_kmt2b_toy.csv        # Toy features file (KMT2B)
-│   └── variants_multigene_toy.csv    # Toy multi-gene variant file
-├── output/                           # Generated plots (gitignored)
-├── main.R                            # Main pipeline orchestrator
-└── .github/workflows/pipeline.yml   # GitHub Actions CI
-
 ---
 
 ## Known limitations
 
-- UTR regions are not yet displayed in gene structure plots (planned for future release)
-- CDS genomic coordinates are not yet mapped from mRNA positions
+- UTR regions are not yet displayed in gene structure plots — see [issue #1](../../issues/1)
+- Features (domains, motifs, PTMs) must be provided manually via CSV — automatic retrieval from UniProt planned — see [issue #2](../../issues/2)
+- DNMT3A (using in the toy data) canonical transcript may correspond to a short isoform
 
 ---
 
