@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
       - name: Setup R
-        uses: r-lib/actions/setup-r@v2.11.0
+        uses: r-lib/actions/setup-r@v2
         with:
           r-version: '4.3.0'
 
@@ -47,14 +47,18 @@ jobs:
             'httr',
             'jsonlite',
             'xml2',
-            'R.utils'
+            'R.utils',
+            'scales',
+            'patchwork'
           ), repos = 'https://cloud.r-project.org')
         shell: Rscript {0}
 
       - name: Install Bioconductor packages
         run: |
-          install.packages('BiocManager', repos = 'https://cloud.r-project.org')
-          BiocManager::install(c('rtracklayer', 'GenomicRanges'), ask = FALSE)
+          install.packages('BiocManager',
+                           repos = 'https://cloud.r-project.org')
+          BiocManager::install(c('rtracklayer', 'GenomicRanges'),
+                               ask = FALSE)
         shell: Rscript {0}
 
       - name: Run pipeline - protein plot
@@ -65,9 +69,10 @@ jobs:
             --plot_type protein \
             --gene_name KMT2B \
             --protein_length 2715 \
+            --grid FALSE \
             --output output/lolliplot_protein.png
 
-      - name: Run pipeline - gene structure plot
+      - name: Run pipeline - single gene plot
         run: |
           Rscript main.R \
             --variants data/variant_kmt2b_toy.csv \
@@ -77,6 +82,15 @@ jobs:
             --genome hg38 \
             --output output/lolliplot_gene.png
 
+      - name: Run pipeline - multi gene plot
+        run: |
+          Rscript main.R \
+            --variants data/variants_multigene_toy.csv \
+            --plot_type multi_gene \
+            --gene_list all \
+            --genome hg38 \
+            --output output/lolliplot_multigene.png
+
       - name: Upload plots
         uses: actions/upload-artifact@v4
         with:
@@ -84,3 +98,4 @@ jobs:
           path: |
             output/lolliplot_protein.png
             output/lolliplot_gene.png
+            output/lolliplot_multigene.png
