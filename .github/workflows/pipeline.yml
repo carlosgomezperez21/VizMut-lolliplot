@@ -72,7 +72,7 @@ jobs:
             --grid FALSE \
             --output output/lolliplot_protein.png
 
-- name: Run pipeline - enrich mode
+      - name: Run pipeline - enrich mode
         run: |
           echo "variant_id,hgvs_c
           cv_1,KMT2B:c.252G>A
