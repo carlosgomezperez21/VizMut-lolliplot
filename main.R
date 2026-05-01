@@ -58,7 +58,12 @@ make_option("--gene_list",
   make_option("--output",
               type    = "character",
               default = "output/lolliplot.png",
-              help    = "Ruta del plot de salida [default: %default]")
+              help    = "Ruta del plot de salida [default: %default]"),
+  
+  make_option("--enrich",
+              type    = "logical",
+              default = FALSE,
+              help    = "Enriquecer variantes desde ClinVar y NCBI [default: %default]")
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -87,7 +92,20 @@ source("R/validate.R")
 
 message("Leyendo variantes...")
 variants_raw <- read.csv(opt$variants)
-variants     <- parse_variants(variants_raw)
+
+#---------------------------
+# Enriquecimiento opcional
+#---------------------------
+if (opt$enrich) {
+  message("Enriqueciendo variantes desde ClinVar y NCBI...")
+  source("R/enrich_variants.R")
+  variants <- enrich_variants(variants_raw, genome = opt$genome)
+  variants$protein_pos <- as.numeric(
+    sub("p\\.[A-Za-z]+([0-9]+).*", "\\1", variants$protein_change)
+  )
+} else {
+  variants <- parse_variants(variants_raw)
+}
 
 #---------------------------
 # Plot tipo: protein
@@ -299,5 +317,5 @@ plot_height <- switch(plot_type,
 ggplot2::ggsave(opt$output, p,
                 width  = 14,
                 height = plot_height,
-                dpi    = 150,
+                dpi    = 300,
                 limitsize = FALSE)

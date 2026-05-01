@@ -50,6 +50,7 @@ plot_gene_lolliplot <- function(variants,
   variants <- variants[!is.na(variants$pos), ]
 
   # etiqueta segun disponibilidad de columnas
+  # etiqueta segun disponibilidad de columnas
   if (label_type == "cds" && "hgvs_c" %in% names(variants)) {
     variants$label <- ifelse(!is.na(variants$hgvs_c),
                              sub(".*:", "", variants$hgvs_c),
@@ -158,7 +159,7 @@ plot_gene_lolliplot <- function(variants,
   #---------------------------
   p <- p +
     geom_text_repel(
-      data = variants %>% filter(ACMG %in% c("P", "LP")),
+      data = variants %>% filter(ACMG %in% c("P", "LP") | is.na(ACMG)),
       aes(x = pos, y = y_top, label = label),
       size = 2,
       min.segment.length = 0,
