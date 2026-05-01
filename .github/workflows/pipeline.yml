@@ -72,6 +72,31 @@ jobs:
             --grid FALSE \
             --output output/lolliplot_protein.png
 
+- name: Run pipeline - enrich mode
+        run: |
+          echo "variant_id,hgvs_c
+          cv_1,KMT2B:c.252G>A
+          cv_2,KMT2B:c.1126_1128del" > /tmp/variants_minimal.csv
+          Rscript main.R \
+            --variants /tmp/variants_minimal.csv \
+            --plot_type single_gene \
+            --gene_name KMT2B \
+            --transcript_id NM_014727.3 \
+            --enrich TRUE \
+            --enrich_output output/variants_enriched.csv \
+            --output output/lolliplot_enrich.png
+
+- name: Upload plots
+        uses: actions/upload-artifact@v4
+        with:
+          name: lolliplots
+          path: |
+            output/lolliplot_protein.png
+            output/lolliplot_gene.png
+            output/lolliplot_multigene.png
+            output/lolliplot_enrich.png
+            output/variants_enriched.csv
+
       - name: Run pipeline - single gene plot
         run: |
           Rscript main.R \
