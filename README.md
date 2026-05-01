@@ -72,9 +72,9 @@ Required only for `--plot_type protein`. CSV with the following columns:
 
 ## Usage
 
-### Enriquecimiento automático desde CSV mínimo
+### Automatic enrichment from minimal CSV data
 
-En caso de que solo tengas dispoble el identificador `c.` (ej. gen:c.999A>C) de tus variantes, el pipeline puede enriquecerlas automáticamente consultando ClinVar y NCBI:
+If you only have the `c.` identifier (e.g., gen:c.999A>C) for your variants, the pipeline can automatically enrich them by querying ClinVar and NCBI:
 
 ```csv
 variant_id,hgvs_c
@@ -94,14 +94,14 @@ Rscript main.R \
   --output output/lolliplot_gene.png
 ```
 
-A partir de esta opción puedes obtiener automáticamente:
-- Coordenadas genómicas en GRCh38
-- Clasificación ACMG desde ClinVar
-- Notación proteica `p.`
-- rsID desde dbSNP
-- Fenotipo asociado
+Using this option, you can automatically obtain:
+- Genomic coordinates in GRCh38
+- ACMG classification from ClinVar
+- Protein notation `p.`
+- rsID from dbSNP
+- Associated phenotype
 
-Las variantes no encontradas en ClinVar se grafican con `ACMG=NA` y etiqueta `c.`, obteniendo sus coordenadas desde NCBI Variation Services.
+Variants not found in ClinVar are plotted with `ACMG=NA` and the `c.` label, with their coordinates obtained from NCBI Variation Services.
 
 ### Protein lolliplot
 
@@ -218,7 +218,7 @@ Rscript main.R \
 
 - UTR regions are not yet displayed in gene structure plots — see [issue #1](../../issues/1)
 - Features (domains, motifs, PTMs) must be provided manually via CSV — automatic retrieval from UniProt planned — see [issue #2](../../issues/2)
-- DNMT3A (using in the toy data) canonical transcript may correspond to a short isoform
+  
 
 ---
 
