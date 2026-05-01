@@ -63,7 +63,12 @@ make_option("--gene_list",
   make_option("--enrich",
               type    = "logical",
               default = FALSE,
-              help    = "Enriquecer variantes desde ClinVar y NCBI [default: %default]")
+              help    = "Enriquecer variantes desde ClinVar y NCBI [default: %default]"),
+  make_option("--enrich_output",
+              type    = "character",
+              default = NULL,
+              help    = "Ruta para guardar CSV enriquecido (ej. output/enriched.csv) [opcional]")
+
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -106,6 +111,22 @@ if (opt$enrich) {
 } else {
   variants <- parse_variants(variants_raw)
 }
+
+# exportar CSV enriquecido si se especifica
+  if (!is.null(opt$enrich_output)) {
+    dir.create(dirname(opt$enrich_output),
+               showWarnings = FALSE, recursive = TRUE)
+    
+    ext <- tools::file_ext(opt$enrich_output)
+    sep <- switch(ext,
+                  "tsv" = "\t",
+                  "txt" = "\t",
+                  ","
+    )
+    write.table(variants, opt$enrich_output,
+                sep = sep, row.names = FALSE, quote = FALSE)
+    message("CSV enriquecido guardado en: ", opt$enrich_output)
+  }
 
 #---------------------------
 # Plot tipo: protein

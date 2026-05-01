@@ -72,6 +72,37 @@ Required only for `--plot_type protein`. CSV with the following columns:
 
 ## Usage
 
+### Enriquecimiento automático desde CSV mínimo
+
+En caso de que solo tengas dispoble el identificador `c.` (ej. gen:c.999A>C) de tus variantes, el pipeline puede enriquecerlas automáticamente consultando ClinVar y NCBI:
+
+```csv
+variant_id,hgvs_c
+cv_1,KMT2B:c.252G>A
+cv_2,KMT2B:c.1126_1128del
+cv_3,KMT2B:c.898G>A
+```
+
+```bash
+Rscript main.R \
+  --variants data/variants_minimal.csv \
+  --plot_type single_gene \
+  --gene_name KMT2B \
+  --transcript_id NM_014727.3 \
+  --enrich TRUE \
+  --enrich_output output/variants_enriched.csv \
+  --output output/lolliplot_gene.png
+```
+
+A partir de esta opción puedes obtiener automáticamente:
+- Coordenadas genómicas en GRCh38
+- Clasificación ACMG desde ClinVar
+- Notación proteica `p.`
+- rsID desde dbSNP
+- Fenotipo asociado
+
+Las variantes no encontradas en ClinVar se grafican con `ACMG=NA` y etiqueta `c.`, obteniendo sus coordenadas desde NCBI Variation Services.
+
 ### Protein lolliplot
 
 ```bash
@@ -175,6 +206,9 @@ Rscript main.R \
 | `--grid` | Split plot by variant type: `TRUE` or `FALSE` | `FALSE` |
 | `--label_type` | Variant label: `protein` or `cds` | `protein` |
 | `--output` | Output path | `output/lolliplot.png` |
+| `--enrich` | Enriquecer variantes automáticamente desde ClinVar y NCBI: `TRUE` o `FALSE` | `FALSE` |
+| `--enrich_output` | Ruta para guardar el CSV enriquecido (ej. `output/enriched.csv`) | `NULL` |
+
 
 ---
 
