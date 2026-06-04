@@ -9,10 +9,11 @@ A command-line pipeline for visualizing protein and genomic variants as lolliplo
 - **Protein lolliplot** — variants mapped to protein sequence with functional domains, motifs, PTMs and zinc fingers
 - **Gene structure lolliplot** — variants mapped to genomic coordinates with exon/intron structure and chromosomal ideogram
 - **Multi-gene lolliplot** — stack multiple genes in a single figure, each with its own ideogram and genomic structure
+- **Exon selection** — select specific exons to display using numbers or ranges (`--exons 1,5-7,10`)
 - **Automatic transcript retrieval** — fetches canonical RefSeq transcript from NCBI by gene symbol
 - **ACMG classification** — real classification fetched from ClinVar via ClinicalTables API
 - **Liftover support** — automatic hg19 → hg38 coordinate conversion via rtracklayer
-- **Flexible gene list** — pass `all`, a comma-separated list, or a `.txt` file
+- **Enrichment mode** — minimal input (`GENE:c.XXXX`) auto-enriched with coordinates, ACMG and protein notation
 
 ---
 
@@ -57,6 +58,13 @@ For `--plot_type multi_gene`, an additional column is required:
 |--------|-------------|---------|
 | `gene` | Gene symbol | `KMT2B` |
 
+When using `--enrich TRUE`, the minimal input is:
+
+| Column | Description | Example |
+|--------|-------------|---------|
+| `variant_id` | Unique variant identifier | `cv_1` |
+| `hgvs_c` | CDS change with gene symbol | `KMT2B:c.252G>A` |
+
 ### Features file (`--features`)
 
 Required only for `--plot_type protein`. CSV with the following columns:
@@ -72,38 +80,9 @@ Required only for `--plot_type protein`. CSV with the following columns:
 
 ## Usage
 
-### Automatic enrichment from minimal CSV data
-
-If you only have the `c.` identifier (e.g., gen:c.999A>C) for your variants, the pipeline can automatically enrich them by querying ClinVar and NCBI:
-
-```csv
-variant_id,hgvs_c
-cv_1,KMT2B:c.252G>A
-cv_2,KMT2B:c.1126_1128del
-cv_3,KMT2B:c.898G>A
-```
-
-```bash
-Rscript main.R \
-  --variants data/variants_minimal.csv \
-  --plot_type single_gene \
-  --gene_name KMT2B \
-  --transcript_id NM_014727.3 \
-  --enrich TRUE \
-  --enrich_output output/variants_enriched.csv \
-  --output output/lolliplot_gene.png
-```
-
-Using this option, you can automatically obtain:
-- Genomic coordinates in GRCh38
-- ACMG classification from ClinVar
-- Protein notation `p.`
-- rsID from dbSNP
-- Associated phenotype
-
-Variants not found in ClinVar are plotted with `ACMG=NA` and the `c.` label, with their coordinates obtained from NCBI Variation Services.
-
 ### Protein lolliplot
+
+Variants are plotted as vertical lollipops above a horizontal protein backbone. Below the backbone, functional features are displayed in layers: domains (first layer), motifs (second), PTMs (third, as circles with anchor lines), and zinc fingers (fourth). Each variant is colored by its ACMG classification. Labels appear only for P and LP variants to avoid clutter.
 
 ```bash
 Rscript main.R \
@@ -122,7 +101,7 @@ Rscript main.R \
 
 ### Protein lolliplot with grid (`--grid TRUE`)
 
-Split the plot by variant type for a clearer view of each category.
+When `--grid TRUE` is set, the plot is split into separate panels by variant type (SNV, DEL, DUP, etc.), each with its own Y scale. This is useful for datasets with many variant types to avoid visual overlap.
 
 ```bash
 Rscript main.R \
@@ -141,7 +120,7 @@ Rscript main.R \
 
 ### Single gene lolliplot
 
-Variants mapped to genomic coordinates with exon/intron structure and chromosomal ideogram. Transcript structure is automatically retrieved from NCBI.
+Variants are plotted over the actual genomic structure of the transcript — exons as blue rectangles, introns as chevron lines. A chromosomal ideogram with Giemsa bands is shown at the top, with the gene position highlighted in red. Variant labels use `c.` notation by default. The transcript structure is automatically retrieved from NCBI using the provided RefSeq ID.
 
 ```bash
 Rscript main.R \
@@ -157,7 +136,9 @@ Rscript main.R \
 
 ---
 
-### Single gene lolliplot con selección de exones
+### Single gene lolliplot with exon selection (`--exons`)
+
+When `--exons` is specified, only the selected exons are displayed. Non-consecutive exon groups are separated by `//` break markers. Introns are shown only between consecutive selected exons. Only variants within the selected regions are plotted; all others are excluded with a log message.
 
 ```bash
 Rscript main.R \
@@ -169,14 +150,13 @@ Rscript main.R \
   --output output/lolliplot_exons.png
 ```
 
-Los exones no consecutivos se separan con marcas `//`. Solo se muestran las variantes que caen dentro de los exones seleccionados.
-
-![Single gen with exon selected](examples/single_gen_exon_selected.png)
+![Single gene with exon selection](examples/single_gen_exon_selected.png)
 
 ---
+
 ### Multi-gene lolliplot
 
-Plot multiple genes in a single figure. Each gene gets its own ideogram and genomic structure. The canonical transcript is automatically retrieved from NCBI for each gene.
+Each gene is plotted in its own panel stacked vertically. Each panel includes its chromosomal ideogram and genomic structure. The canonical transcript is automatically retrieved from NCBI for each gene. The gene list can be passed as `all`, a comma-separated string, or a `.txt` file with one gene per line.
 
 ```bash
 # All genes in the CSV
@@ -208,6 +188,63 @@ Rscript main.R \
 
 ---
 
+### Enrichment mode (`--enrich TRUE`)
+
+When `--enrich TRUE` is set, the pipeline accepts a minimal CSV with only `variant_id` and `hgvs_c` in `GENE:c.XXXX` format. It automatically retrieves coordinates, ACMG classification, protein notation, rsID and phenotype from ClinVar. Variants not found in ClinVar are plotted with `ACMG=NA` using their `c.` label, with coordinates obtained from NCBI Variation Services when available.
+
+```bash
+Rscript main.R \
+  --variants data/variants_minimal.csv \
+  --plot_type single_gene \
+  --gene_name KMT2B \
+  --transcript_id NM_014727.3 \
+  --enrich TRUE \
+  --enrich_output output/variants_enriched.csv \
+  --output output/lolliplot_gene.png
+```
+
+#### Enrichment output columns
+
+| Column | Description | Source |
+|--------|-------------|--------|
+| `variant_id` | Original user ID | Input |
+| `gene` | Gene symbol | Extracted from `hgvs_c` |
+| `hgvs_c` | Original CDS notation | Input |
+| `protein_change` | Protein notation (`p.`) | ClinVar |
+| `chr` | Chromosome (hg38) | ClinVar + liftover |
+| `pos` | Genomic position (hg38) | ClinVar + liftover |
+| `ref` | Reference allele | ClinVar |
+| `alt` | Alternate allele | ClinVar |
+| `variant_type` | Variant type | ClinVar |
+| `ACMG` | ACMG classification | ClinVar (`NA` if not found) |
+| `clinsig` | Full clinical significance | ClinVar |
+| `phenotype` | Associated phenotype | ClinVar |
+| `dbsnp` | rsID | ClinVar / NCBI Variation Services |
+| `gen_position` | Formatted genomic position | Computed |
+
+Example enrichment output:
+
+| variant_id | gene | hgvs_c | protein_change | ACMG | clinsig | phenotype |
+|-----------|------|--------|----------------|------|---------|-----------|
+| cv_1 | KMT2B | KMT2B:c.252G>A | p.Trp84Ter | P | Pathogenic | Complex neurodevelopmental disorder |
+| cv_2 | KMT2B | KMT2B:c.1126_1128del | p.Lys376del | B | Benign | Dystonia 28, childhood-onset |
+| cv_3 | KMT2B | KMT2B:c.898G>A | NA | NA | Not in ClinVar | NA |
+
+---
+
+## ACMG color scheme
+
+| Classification | Color | Description |
+|---------------|-------|-------------|
+| P | Red | Pathogenic |
+| LP | Orange | Likely pathogenic |
+| VUS | Gray | Variant of uncertain significance |
+| LB | Light blue | Likely benign |
+| B | Green | Benign |
+| NA | Dark gray | Not found in ClinVar |
+
+---
+
 ## All flags
 
 | Flag | Description | Default |
@@ -217,26 +254,21 @@ Rscript main.R \
 | `--plot_type` | Plot type: `protein`, `single_gene`, `multi_gene` | `protein` |
 | `--gene_name` | Gene name for plot title | `GENE` |
 | `--protein_length` | Protein length in aa | required for `protein` |
-| `--transcript_id` | RefSeq transcript ID | required for `single_gene` |
+| `--transcript_id` | RefSeq transcript ID (e.g. `NM_014727.3`) | required for `single_gene` |
 | `--gene_list` | Genes to plot: `all`, comma list, or `.txt` file | `all` |
 | `--genome` | Genome assembly: `hg38` or `hg19` | `hg38` |
 | `--grid` | Split plot by variant type: `TRUE` or `FALSE` | `FALSE` |
 | `--label_type` | Variant label: `protein` or `cds` | `protein` |
+| `--exons` | Exons to display: numbers or ranges e.g. `1,5-7,10` | all exons |
+| `--enrich` | Auto-enrich variants from ClinVar and NCBI: `TRUE` or `FALSE` | `FALSE` |
+| `--enrich_output` | Path to save enriched CSV (e.g. `output/enriched.csv`) | `NULL` |
 | `--output` | Output path | `output/lolliplot.png` |
-| `--enrich` | Enriquecer variantes automáticamente desde ClinVar y NCBI: `TRUE` o `FALSE` | `FALSE` |
-| `--enrich_output` | Ruta para guardar el CSV enriquecido (ej. `output/enriched.csv`) | `NULL` |
-| `--exons` | Exones a mostrar: números o rangos ej. `1,5-7,10` [default: todos] | `NULL` |
-
-
----
-
 ---
 
 ## Known limitations
 
-- UTR regions are not yet displayed in gene structure plots — see [issue #1](../../issues/1)
-- Features (domains, motifs, PTMs) must be provided manually via CSV — automatic retrieval from UniProt planned — see [issue #2](../../issues/2)
-  
+- UTR regions not yet displayed in gene structure plots — see [issue #1](../../issues/1)
+- Features must be provided manually via CSV — automatic retrieval from UniProt planned — see [issue #2](../../issues/2)
 
 ---
 
