@@ -79,18 +79,16 @@ plot_gene_lolliplot <- function(variants,
   if (!is.null(breaks) && length(breaks) > 0) {
     for (bp in breaks) {
       p <- p +
-        # linea vertical discontinua
         annotate("segment",
                  x = bp, xend = bp,
-                 y = -0.35, yend = 0.35,
+                 y = -0.3, yend = 1.2,
                  color = "gray30",
-                 linewidth = 0.8,
-                 linetype = "solid") +
-        # simbolo //
+                 linewidth = 0.6,
+                 linetype = "dashed") +
         annotate("text",
-                 x = bp, y = 0.5,
+                 x = bp, y = 1.35,
                  label = "//",
-                 size = 4,
+                 size = 5,
                  color = "gray30",
                  fontface = "bold")
     }
