@@ -67,7 +67,11 @@ make_option("--gene_list",
   make_option("--enrich_output",
               type    = "character",
               default = NULL,
-              help    = "Ruta para guardar CSV enriquecido (ej. output/enriched.csv) [opcional]")
+              help    = "Ruta para guardar CSV enriquecido (ej. output/enriched.csv) [opcional]"),
+  make_option("--exons",
+              type    = "character",
+              default = NULL,
+              help    = "Exones a mostrar: numeros o rangos ej. '1,5-7,10' [default: todos]")
 
 )
 
@@ -216,17 +220,19 @@ if (plot_type == "single_gene") {
 message("Obteniendo estructura del transcrito: ", opt$transcript_id)
   struct <- fetch_transcript_structure(opt$transcript_id)
 
+  # filtrar exones si se especifica --exons
+  source("R/parse_exon_selection.R")
+  exon_sel    <- parse_exon_selection(opt$exons)
+  exon_filter <- filter_exons(struct, exon_sel)
+  struct      <- exon_filter$structure
+  breaks      <- exon_filter$breaks
+
+  # citobandas
   message("Obteniendo citobandas...")
   source("R/fetch_cytobands.R")
   source("R/plot_ideogram.R")
   chr   <- unique(struct$chr)[1]
-  bands <- tryCatch(
-    fetch_cytobands(chr),
-    error = function(e) {
-      message("Warning: no se pudieron obtener citobandas: ", e$message)
-      NULL
-    }
-  )
+  bands <- tryCatch(fetch_cytobands(chr), error=function(e) NULL)
 
   # filtrar variantes dentro del transcrito
   tx_start    <- min(struct$start)
@@ -240,17 +246,31 @@ message("Obteniendo estructura del transcrito: ", opt$transcript_id)
     message("Nota: ", n_out, " variantes fuera del transcrito fueron excluidas")
   }
 
-  message("Generando plot genomico...")
-p <- plot_gene_lolliplot(
+  # excluir variantes fuera de exones seleccionados
+  if (!is.null(exon_sel)) {
+    n_before    <- nrow(variants_in)
+    variants_in <- variants_in[
+      !is.na(variants_in$pos) &
+      variants_in$pos >= min(exon_filter$structure$start) &
+      variants_in$pos <= max(exon_filter$structure$end), ]
+    n_excl <- n_before - nrow(variants_in)
+    if (n_excl > 0) {
+      message("Nota: ", n_excl,
+              " variantes excluidas por caer fuera de los exones seleccionados")
+    }
+  }
+
+message("Generando plot genomico...")
+  p <- plot_gene_lolliplot(
     variants             = variants_in,
     transcript_structure = struct,
     gene_name            = opt$gene_name,
     label_type           = opt$label_type,
     grid                 = opt$grid,
-    cytobands            = bands
+    cytobands            = bands,
+    breaks               = breaks
   )
 }
-
 #---------------------------
 # Plot tipo: multi_gene (Fase 3)
 #---------------------------

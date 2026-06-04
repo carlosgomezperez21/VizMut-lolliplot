@@ -13,7 +13,8 @@ plot_gene_lolliplot <- function(variants,
                                 gene_name  = "Gene",
                                 label_type = "protein",
                                 grid       = FALSE,
-                                cytobands  = NULL) {
+                                cytobands  = NULL,
+                                breaks     = NULL) {
 
   library(ggplot2)
   library(dplyr)
@@ -71,6 +72,29 @@ plot_gene_lolliplot <- function(variants,
              y = 0, yend = 0,
              linewidth = 0.5,
              color = "gray40")
+
+  #---------------------------
+  # Breaks // entre exones no consecutivos
+  #---------------------------
+  if (!is.null(breaks) && length(breaks) > 0) {
+    for (bp in breaks) {
+      p <- p +
+        # linea vertical discontinua
+        annotate("segment",
+                 x = bp, xend = bp,
+                 y = -0.35, yend = 0.35,
+                 color = "gray30",
+                 linewidth = 0.8,
+                 linetype = "solid") +
+        # simbolo //
+        annotate("text",
+                 x = bp, y = 0.5,
+                 label = "//",
+                 size = 4,
+                 color = "gray30",
+                 fontface = "bold")
+    }
+  }
 
   #---------------------------
   # UTR5
