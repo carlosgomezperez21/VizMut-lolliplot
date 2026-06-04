@@ -246,13 +246,21 @@ message("Obteniendo estructura del transcrito: ", opt$transcript_id)
     message("Nota: ", n_out, " variantes fuera del transcrito fueron excluidas")
   }
 
-  # excluir variantes fuera de exones seleccionados
+  # excluir variantes fuera de los exones/intrones seleccionados
   if (!is.null(exon_sel)) {
-    n_before    <- nrow(variants_in)
-    variants_in <- variants_in[
-      !is.na(variants_in$pos) &
-      variants_in$pos >= min(exon_filter$structure$start) &
-      variants_in$pos <= max(exon_filter$structure$end), ]
+    n_before <- nrow(variants_in)
+
+    # obtener rangos validos (exones seleccionados + intrones entre consecutivos)
+    valid_ranges <- exon_filter$structure %>%
+      filter(type %in% c("exon", "intron")) %>%
+      select(start, end)
+
+    # filtrar variantes que caen en alguno de esos rangos
+    variants_in <- variants_in[!is.na(variants_in$pos) &
+      sapply(variants_in$pos, function(p) {
+        any(p >= valid_ranges$start & p <= valid_ranges$end)
+      }), ]
+
     n_excl <- n_before - nrow(variants_in)
     if (n_excl > 0) {
       message("Nota: ", n_excl,
@@ -271,6 +279,7 @@ message("Generando plot genomico...")
     breaks               = breaks
   )
 }
+
 #---------------------------
 # Plot tipo: multi_gene (Fase 3)
 #---------------------------

@@ -74,18 +74,35 @@ filter_exons <- function(struct, exon_numbers) {
     }
   }
 
-  # reconstruir estructura con solo los elementos relevantes
-  # incluir intrones entre exones seleccionados consecutivos
+  # reconstruir estructura con solo exones seleccionados
+  # e intrones SOLO entre exones consecutivos seleccionados
   keep_starts <- exons_sel$start
   keep_ends   <- exons_sel$end
 
   struct_filtered <- struct[struct$type %in% c("utr5", "utr3") |
-    (struct$type == "exon" & struct$start %in% keep_starts) |
-    (struct$type == "intron" &
-       struct$start >= min(keep_starts) &
-       struct$end   <= max(keep_ends)), ]
+    (struct$type == "exon" & struct$start %in% keep_starts), ]
 
-  message("Exones en el plot: ", nrow(exons_sel),
+  # agregar solo intrones entre exones seleccionados consecutivos
+  if (nrow(exons_sel) > 1) {
+    for (i in seq_len(nrow(exons_sel) - 1)) {
+      curr_num <- exons_sel$exon_number[i]
+      next_num <- exons_sel$exon_number[i + 1]
+
+      # solo agregar intron si los exones son consecutivos
+      if (next_num - curr_num == 1) {
+        intron_between <- struct[
+          struct$type == "intron" &
+          struct$start >= exons_sel$end[i] &
+          struct$end   <= exons_sel$start[i + 1], ]
+        struct_filtered <- bind_rows(struct_filtered, intron_between)
+      }
+    }
+  }
+
+  struct_filtered <- struct_filtered %>% arrange(start)
+
+
+message("Exones en el plot: ", nrow(exons_sel),
           " de ", max_exon)
   if (length(breaks) > 0) {
     message("Breaks (//) en posiciones: ",
