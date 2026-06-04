@@ -171,6 +171,8 @@ Rscript main.R \
 
 Los exones no consecutivos se separan con marcas `//`. Solo se muestran las variantes que caen dentro de los exones seleccionados.
 
+![Single gen with exon selected](examples/single_gen_exon_selected.png)
+
 ---
 ### Multi-gene lolliplot
 
