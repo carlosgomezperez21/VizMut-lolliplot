@@ -80,6 +80,8 @@ Required only for `--plot_type protein`. CSV with the following columns:
 
 ## Usage
 
+
+
 ### Protein lolliplot
 
 Variants are plotted as vertical lollipops above a horizontal protein backbone. Below the backbone, functional features are displayed in layers: domains (first layer), motifs (second), PTMs (third, as circles with anchor lines), and zinc fingers (fourth). Each variant is colored by its ACMG classification. Labels appear only for P and LP variants to avoid clutter.
