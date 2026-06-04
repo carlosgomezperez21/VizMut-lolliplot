@@ -1,0 +1,14 @@
+feature_type,feature_name,start,end
+domain,Topological cytoplasmatic domain,1,22
+domain,Transmembrane domain,23,45
+domain,Topological extracellular domain,46,75
+domain,Transmembrane domain,76,95
+domain,Topological cytoplasmatic domain,96,130
+domain,Transmembrane domain,131,153
+domain,Topological extracellular domain,154,191
+domain,Transmembrane domain,192,214
+domain,Topological cytoplasmatic domain,215,283
+ptm,Phosphoserine,258,258
+ptm,Phosphoserine,266,266
+ptm,Phosphoserine,277,277
+ptm,Phosphoserine,233,233

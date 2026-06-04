@@ -46,7 +46,7 @@ fetch_variants_clinvar <- function(gene_symbol,
     "&maxList=", max_results,
     "&ef=HGVS_c,HGVS_p,Chromosome,Start,Stop,",
     "ReferenceAllele,AlternateAllele,Type,AminoAcidChange,",
-    "ClinicalSignificance,PhenotypeList,dbSNP"
+    "ClinicalSignificance,PhenotypeList,dbSNP,Name"
   )
 
   resp <- GET(url)
@@ -91,7 +91,9 @@ fetch_variants_clinvar <- function(gene_symbol,
     phenotype      = sapply(seq_len(n), function(i)
                        safe_get(extras$PhenotypeList, i)),
     dbsnp          = sapply(seq_len(n), function(i)
-                       safe_get(extras$dbSNP, i))
+                       safe_get(extras$dbSNP, i)),
+    name_field     = sapply(seq_len(n), function(i)
+                       safe_get(extras$Name, i)),
   ) %>%
     mutate(
       ref = ifelse(ref == "na" | ref == "", NA, ref),
@@ -148,7 +150,7 @@ fetch_variants_clinvar <- function(gene_symbol,
   result <- result %>%
     select(hgvs_c, hgvs_p, chr, pos, ref, alt,
            variant_type, protein_change, clinsig,
-           ACMG, phenotype, dbsnp, gene) %>%
+           ACMG, phenotype, dbsnp, gene,name_field) %>%
     filter(!is.na(pos))
 
   return(result)
