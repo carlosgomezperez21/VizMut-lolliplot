@@ -157,6 +157,21 @@ Rscript main.R \
 
 ---
 
+### Single gene lolliplot con selección de exones
+
+```bash
+Rscript main.R \
+  --variants data/variant_kmt2b_toy.csv \
+  --plot_type single_gene \
+  --gene_name KMT2B \
+  --transcript_id NM_014727.3 \
+  --exons 1,5-7,35-37 \
+  --output output/lolliplot_exons.png
+```
+
+Los exones no consecutivos se separan con marcas `//`. Solo se muestran las variantes que caen dentro de los exones seleccionados.
+
+---
 ### Multi-gene lolliplot
 
 Plot multiple genes in a single figure. Each gene gets its own ideogram and genomic structure. The canonical transcript is automatically retrieved from NCBI for each gene.
@@ -208,6 +223,7 @@ Rscript main.R \
 | `--output` | Output path | `output/lolliplot.png` |
 | `--enrich` | Enriquecer variantes automáticamente desde ClinVar y NCBI: `TRUE` o `FALSE` | `FALSE` |
 | `--enrich_output` | Ruta para guardar el CSV enriquecido (ej. `output/enriched.csv`) | `NULL` |
+| `--exons` | Exones a mostrar: números o rangos ej. `1,5-7,10` [default: todos] | `NULL` |
 
 
 ---
