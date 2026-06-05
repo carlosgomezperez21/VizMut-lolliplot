@@ -162,19 +162,35 @@ plot_gene_lolliplot <- function(variants,
     ungroup() %>%
     mutate(y_top = 1 + stack * 0.15)
 
-  p <- p +
-    geom_segment(data = variants,
-                 aes(x = pos, xend = pos,
-                     y = 0.25, yend = y_top,
+  # usar count si existe, si no size fijo
+  has_count <- "count" %in% names(variants)
+
+  if (has_count) {
+    p <- p +
+      geom_segment(data = variants,
+                   aes(x = pos, xend = pos,
+                       y = 0.25, yend = y_top,
+                       color = ACMG),
+                   linewidth = 0.6) +
+      geom_point(data = variants,
+                 aes(x = pos, y = y_top,
+                     color = ACMG,
+                     size  = count)) +
+      scale_color_manual(values = acmg_colors, name = "ACMG") +
+      scale_size_continuous(range = c(2, 8), name = "Count")
+  } else {
+    p <- p +
+      geom_segment(data = variants,
+                   aes(x = pos, xend = pos,
+                       y = 0.25, yend = y_top,
+                       color = ACMG),
+                   linewidth = 0.6) +
+      geom_point(data = variants,
+                 aes(x = pos, y = y_top,
                      color = ACMG),
-                 linewidth = 0.6) +
-
-    geom_point(data = variants,
-               aes(x = pos, y = y_top,
-                   color = ACMG),
-               size = 2.5) +
-
-    scale_color_manual(values = acmg_colors, name = "ACMG")
+                 size = 2.5) +
+      scale_color_manual(values = acmg_colors, name = "ACMG")
+  }
 
   #---------------------------
   # Etiquetas P y LP

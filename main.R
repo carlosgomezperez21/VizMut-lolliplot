@@ -68,10 +68,16 @@ make_option("--gene_list",
               type    = "character",
               default = NULL,
               help    = "Ruta para guardar CSV enriquecido (ej. output/enriched.csv) [opcional]"),
+
   make_option("--exons",
               type    = "character",
               default = NULL,
-              help    = "Exones a mostrar: numeros o rangos ej. '1,5-7,10' [default: todos]")
+              help    = "Exones a mostrar: numeros o rangos ej. '1,5-7,10' [default: todos]"),
+
+  make_option("--count",
+              type    = "logical",
+              default = FALSE,
+              help    = "Deduplicar variantes y escalar lollipops por frecuencia [default: %default]")
 
 )
 
@@ -131,6 +137,16 @@ if (opt$enrich) {
                 sep = sep, row.names = FALSE, quote = FALSE)
     message("CSV enriquecido guardado en: ", opt$enrich_output)
   }
+
+
+#---------------------------
+# Deduplicacion opcional
+#---------------------------
+if (opt$count) {
+  message("Deduplicando variantes...")
+  source("R/dedup_variants.R")
+  variants <- dedup_variants(variants)
+}
 
 #---------------------------
 # Plot tipo: protein
