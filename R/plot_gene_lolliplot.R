@@ -139,8 +139,7 @@ plot_gene_lolliplot <- function(variants,
                    color = "gray50",
                    linewidth = 0.4)
   }
-
-  #---------------------------
+#---------------------------
   # Exones
   #---------------------------
   if (nrow(exons) > 0) {
@@ -151,7 +150,31 @@ plot_gene_lolliplot <- function(variants,
                 fill = "#4A90D9",
                 color = "#2C5F8A",
                 linewidth = 0.3)
+
+    # etiquetas solo en exones suficientemente anchos
+    total_range  <- gene_end - gene_start
+    min_width    <- total_range * 0.03  # exon debe ser >3% del rango total
+
+    exons_label <- exons %>%
+      mutate(
+        width     = end - start,
+        mid       = (start + end) / 2,
+        exon_num  = as.integer(sub("exon_", "", name)),
+        label     = paste("Exon", exon_num)
+      ) %>%
+      filter(width >= min_width)
+
+    if (nrow(exons_label) > 0) {
+      p <- p +
+        geom_text(data = exons_label,
+                  aes(x = mid, y = 0, label = label),
+                  size     = 2.5,
+                  color    = "white",
+                  fontface = "bold",
+                  vjust    = 0.5)
+    }
   }
+  
 
   #---------------------------
   # Lollipops de variantes
