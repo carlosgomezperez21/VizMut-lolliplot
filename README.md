@@ -171,7 +171,7 @@ Rscript main.R \
   --output output/lolliplot_exons_gnomad.png
 ```
 
-![Gene lolliplot with gnomAD frequencies](examples/lolliplot_exons_gnomad.png)
+![Gene lolliplot with gnomAD frequencies](examples/gene_gnomad_lolliplot.png)
 
 ---
 
