@@ -1,6 +1,6 @@
 # VizMut-lolliplot
 
-A command-line pipeline for visualizing protein and genomic variants as lolliplots. Supports single-gene and multi-gene visualization with automatic retrieval of genomic structure from NCBI and cytogenetic bands from UCSC.
+A command-line pipeline for visualizing protein and genomic variants as lolliplots. Supports single-gene and multi-gene visualization with automatic retrieval of genomic structure from NCBI, cytogenetic bands from UCSC, and population allele frequencies from gnomAD v4.
 
 ---
 
@@ -9,11 +9,13 @@ A command-line pipeline for visualizing protein and genomic variants as lolliplo
 - **Protein lolliplot** — variants mapped to protein sequence with functional domains, motifs, PTMs and zinc fingers
 - **Gene structure lolliplot** — variants mapped to genomic coordinates with exon/intron structure and chromosomal ideogram
 - **Multi-gene lolliplot** — stack multiple genes in a single figure, each with its own ideogram and genomic structure
-- **Exon selection** — select specific exons to display using numbers or ranges (`--exons 1,5-7,10`)
+- **Exon selection** — select specific exons using numbers or ranges (`--exons 1,5-7,10`), with `//` break markers between non-consecutive groups
+- **Variant count mode** — deduplicate variants and scale lollipop size by cohort frequency (`--count TRUE`)
+- **gnomAD v4 population frequencies** — pie charts on lollipop heads showing allele frequency across AFR, AMR, EAS, EUR and SAS populations (`--gnomad TRUE`)
 - **Automatic transcript retrieval** — fetches canonical RefSeq transcript from NCBI by gene symbol
 - **ACMG classification** — real classification fetched from ClinVar via ClinicalTables API
 - **Liftover support** — automatic hg19 → hg38 coordinate conversion via rtracklayer
-- **Enrichment mode** — minimal input (`GENE:c.XXXX`) auto-enriched with coordinates, ACMG and protein notation
+- **Enrichment mode** — minimal input (`GENE:c.XXXX`) auto-enriched with coordinates, ACMG, protein notation and gnomAD frequencies
 
 ---
 
@@ -46,7 +48,7 @@ CSV with the following required columns:
 | Column | Description | Example |
 |--------|-------------|---------|
 | `variant_id` | Unique variant identifier | `cv_1` |
-| `gen_position` | Genomic position | `chr19-35718020 N>N` |
+| `gen_position` | Genomic position | `chr19-35718020 G>A` |
 | `protein_change` | Protein change in HGVS | `p.Lys376del` |
 | `hgvs_c` | CDS change in HGVS | `NM_014727.3:c.1126del` |
 | `variant_type` | Variant type | `SNV`, `DEL`, `DUP`, `INS` |
@@ -80,8 +82,6 @@ Required only for `--plot_type protein`. CSV with the following columns:
 
 ## Usage
 
-
-
 ### Protein lolliplot
 
 Variants are plotted as vertical lollipops above a horizontal protein backbone. Below the backbone, functional features are displayed in layers: domains (first layer), motifs (second), PTMs (third, as circles with anchor lines), and zinc fingers (fourth). Each variant is colored by its ACMG classification. Labels appear only for P and LP variants to avoid clutter.
@@ -93,7 +93,6 @@ Rscript main.R \
   --plot_type protein \
   --gene_name KMT2B \
   --protein_length 2715 \
-  --grid FALSE \
   --output output/lolliplot_protein.png
 ```
 
@@ -103,7 +102,7 @@ Rscript main.R \
 
 ### Protein lolliplot with grid (`--grid TRUE`)
 
-When `--grid TRUE` is set, the plot is split into separate panels by variant type (SNV, DEL, DUP, etc.), each with its own Y scale. This is useful for datasets with many variant types to avoid visual overlap.
+When `--grid TRUE` is set, the plot is split into separate panels by variant type (SNV, DEL, DUP, etc.), each with its own Y scale. Useful for datasets with many variant types to avoid visual overlap.
 
 ```bash
 Rscript main.R \
@@ -122,7 +121,7 @@ Rscript main.R \
 
 ### Single gene lolliplot
 
-Variants are plotted over the actual genomic structure of the transcript — exons as blue rectangles, introns as chevron lines. A chromosomal ideogram with Giemsa bands is shown at the top, with the gene position highlighted in red. Variant labels use `c.` notation by default. The transcript structure is automatically retrieved from NCBI using the provided RefSeq ID.
+Variants are plotted over the actual genomic structure of the transcript — exons as blue rectangles labeled by number, introns as chevron lines. A chromosomal ideogram with Giemsa bands is shown at the top, with the gene position highlighted in red. Variant labels use `c.` notation by default. The transcript structure is automatically retrieved from NCBI using the provided RefSeq ID.
 
 ```bash
 Rscript main.R \
@@ -140,7 +139,7 @@ Rscript main.R \
 
 ### Single gene lolliplot with exon selection (`--exons`)
 
-When `--exons` is specified, only the selected exons are displayed. Non-consecutive exon groups are separated by `//` break markers. Introns are shown only between consecutive selected exons. Only variants within the selected regions are plotted; all others are excluded with a log message.
+When `--exons` is specified, only the selected exons are displayed. Non-consecutive exon groups are separated by `//` break markers. Introns are shown only between consecutive selected exons. Only variants within the selected regions are plotted; all others are excluded with a log message. Accepts individual exon numbers and ranges.
 
 ```bash
 Rscript main.R \
@@ -153,6 +152,24 @@ Rscript main.R \
 ```
 
 ![Single gene with exon selection](examples/single_gen_exon_selected.png)
+
+---
+
+### Single gene lolliplot with gnomAD frequencies (`--gnomad TRUE`)
+
+When `--gnomad TRUE` is set, each lollipop head displays a pie chart showing the allele frequency across five continental populations from gnomAD v4. Each sector is proportional to the frequency in that population relative to the total. ACMG classification is preserved as the point color above the pie chart. Variants with AF=0 in all populations (typically P/LP) show only the ACMG point. A console summary lists variants with and without gnomAD data.
+
+```bash
+Rscript main.R \
+  --variants output/gjb1_enriched.csv \
+  --plot_type single_gene \
+  --gene_name GJB1 \
+  --transcript_id NM_000166.6 \
+  --gnomad TRUE \
+  --output output/lolliplot_gnomad.png
+```
+
+![Gene lolliplot with gnomAD frequencies](examples/gene_gnomad_lolliplot.png)
 
 ---
 
@@ -192,7 +209,7 @@ Rscript main.R \
 
 ### Enrichment mode (`--enrich TRUE`)
 
-When `--enrich TRUE` is set, the pipeline accepts a minimal CSV with only `variant_id` and `hgvs_c` in `GENE:c.XXXX` format. It automatically retrieves coordinates, ACMG classification, protein notation, rsID and phenotype from ClinVar. Variants not found in ClinVar are plotted with `ACMG=NA` using their `c.` label, with coordinates obtained from NCBI Variation Services when available.
+When `--enrich TRUE` is set, the pipeline accepts a minimal CSV with only `variant_id` and `hgvs_c` in `GENE:c.XXXX` format. It automatically retrieves coordinates, ACMG classification, protein notation, rsID, phenotype and gnomAD v4 population frequencies from ClinVar and gnomAD. Variants not found in ClinVar are plotted with `ACMG=NA` and `c.` label, with coordinates obtained from NCBI Variation Services when available.
 
 ```bash
 Rscript main.R \
@@ -213,24 +230,29 @@ Rscript main.R \
 | `gene` | Gene symbol | Extracted from `hgvs_c` |
 | `hgvs_c` | Original CDS notation | Input |
 | `protein_change` | Protein notation (`p.`) | ClinVar |
+| `gen_position` | Formatted genomic position | Computed |
 | `chr` | Chromosome (hg38) | ClinVar + liftover |
 | `pos` | Genomic position (hg38) | ClinVar + liftover |
-| `ref` | Reference allele | ClinVar |
-| `alt` | Alternate allele | ClinVar |
+| `ref` | Reference allele | gnomAD v4 |
+| `alt` | Alternate allele | gnomAD v4 |
 | `variant_type` | Variant type | ClinVar |
 | `ACMG` | ACMG classification | ClinVar (`NA` if not found) |
 | `clinsig` | Full clinical significance | ClinVar |
 | `phenotype` | Associated phenotype | ClinVar |
 | `dbsnp` | rsID | ClinVar / NCBI Variation Services |
-| `gen_position` | Formatted genomic position | Computed |
+| `AF_AFR` | Allele frequency — African | gnomAD v4 |
+| `AF_AMR` | Allele frequency — American | gnomAD v4 |
+| `AF_EAS` | Allele frequency — East Asian | gnomAD v4 |
+| `AF_EUR` | Allele frequency — European | gnomAD v4 |
+| `AF_SAS` | Allele frequency — South Asian | gnomAD v4 |
 
 Example enrichment output:
 
-| variant_id | gene | hgvs_c | protein_change | ACMG | clinsig | phenotype |
-|-----------|------|--------|----------------|------|---------|-----------|
-| cv_1 | KMT2B | KMT2B:c.252G>A | p.Trp84Ter | P | Pathogenic | Complex neurodevelopmental disorder |
-| cv_2 | KMT2B | KMT2B:c.1126_1128del | p.Lys376del | B | Benign | Dystonia 28, childhood-onset |
-| cv_3 | KMT2B | KMT2B:c.898G>A | NA | NA | Not in ClinVar | NA |
+| variant_id | hgvs_c | ACMG | ref | alt | AF_AFR | AF_EUR | AF_SAS |
+|-----------|--------|------|-----|-----|--------|--------|--------|
+| cv_1 | KMT2B:c.252G>A | P | NA | NA | NA | NA | NA |
+| cv_2 | KMT2B:c.1126_1128del | B | C | T | 0.0000242 | 0 | 0 |
+| cv_3 | KMT2B:c.4550G>A | VUS | G | A | 0.0000269 | 0.00000426 | 0 |
 
 ---
 
@@ -246,31 +268,46 @@ Example enrichment output:
 | NA | Dark gray | Not found in ClinVar |
 
 ---
+## gnomAD v4 population colors
+
+| Population | Color | Description |
+|-----------|-------|-------------|
+| AFR | Red | African |
+| AMR | Orange | American (Latino) |
+| EAS | Green | East Asian |
+| EUR | Blue | European (non-Finnish) |
+| SAS | Purple | South Asian |
+
+---
 
 ## All flags
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--variants` | Path to variant CSV | required |
-| `--features` | Path to features CSV | required for `protein` |
+| `--variants` | Path to variant CSV (required) | — |
+| `--features` | Path to features CSV (required for `protein`) | — |
 | `--plot_type` | Plot type: `protein`, `single_gene`, `multi_gene` | `protein` |
-| `--gene_name` | Gene name for plot title | `GENE` |
-| `--protein_length` | Protein length in aa | required for `protein` |
-| `--transcript_id` | RefSeq transcript ID (e.g. `NM_014727.3`) | required for `single_gene` |
-| `--gene_list` | Genes to plot: `all`, comma list, or `.txt` file | `all` |
-| `--genome` | Genome assembly: `hg38` or `hg19` | `hg38` |
-| `--grid` | Split plot by variant type: `TRUE` or `FALSE` | `FALSE` |
-| `--label_type` | Variant label: `protein` or `cds` | `protein` |
-| `--exons` | Exons to display: numbers or ranges e.g. `1,5-7,10` | all exons |
-| `--enrich` | Auto-enrich variants from ClinVar and NCBI: `TRUE` or `FALSE` | `FALSE` |
-| `--enrich_output` | Path to save enriched CSV (e.g. `output/enriched.csv`) | `NULL` |
-| `--output` | Output path | `output/lolliplot.png` |
+| `--gene_name` | Gene name shown in plot title | `GENE` |
+| `--protein_length` | Protein length in amino acids (required for `protein`) | — |
+| `--transcript_id` | RefSeq transcript ID e.g. `NM_014727.3` (required for `single_gene`) | — |
+| `--gene_list` | Genes to plot: `all`, comma-separated list `KMT2B,DNMT3A`, or path to `.txt` file | `all` |
+| `--genome` | Genome assembly of input coordinates: `hg38` or `hg19` | `hg38` |
+| `--grid` | Split plot into panels by variant type: `TRUE` or `FALSE` | `FALSE` |
+| `--label_type` | Variant label notation: `protein` (p.) or `cds` (c.) | `protein` |
+| `--exons` | Exons to display using numbers or ranges e.g. `1,5-7,35-37` (default: all exons) | `NULL` |
+| `--count` | Deduplicate variants by `hgvs_c` and scale lollipop size by cohort frequency: `TRUE` or `FALSE` | `FALSE` |
+| `--gnomad` | Add gnomAD v4 population frequency pie charts to lollipops: `TRUE` or `FALSE` | `FALSE` |
+| `--enrich` | Auto-enrich minimal CSV from ClinVar, NCBI and gnomAD v4: `TRUE` or `FALSE` | `FALSE` |
+| `--enrich_output` | Path to save enriched CSV e.g. `output/enriched.csv` | `NULL` |
+| `--output` | Output plot path | `output/lolliplot.png` |
+
 ---
 
 ## Known limitations
 
 - UTR regions not yet displayed in gene structure plots — see [issue #1](../../issues/1)
 - Features must be provided manually via CSV — automatic retrieval from UniProt planned — see [issue #2](../../issues/2)
+- gnomAD pie charts are available only for `single_gene` plot type
 
 ---
 
