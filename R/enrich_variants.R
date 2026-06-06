@@ -14,6 +14,22 @@ enrich_variants <- function(variants, genome = "hg38") {
 
   source("R/fetch_canonical_transcript.R")
   source("R/hgvs_to_genomic.R")
+  
+
+  #---------------------------
+  # funcion auxiliar: extraer ref/alt desde hgvs_c para SNVs
+  #---------------------------
+  extract_ref_alt_from_hgvs <- function(hgvs_c) {
+    # formato: GENE:c.252G>A o NM_xxx:c.252G>A
+    c_dot <- sub(".*:", "", hgvs_c)
+    # SNV: c.252G>A
+    m <- regmatches(c_dot, regexpr("[A-Z]>[A-Z]$", c_dot))
+    if (length(m) > 0) {
+      parts <- strsplit(m, ">")[[1]]
+      return(list(ref=parts[1], alt=parts[2]))
+    }
+    return(list(ref=NA, alt=NA))
+  }
 
   #---------------------------
   # funcion auxiliar: coordenadas desde NCBI
@@ -318,11 +334,55 @@ enrich_variants <- function(variants, genome = "hg38") {
     }
   }
 
+  #---------------------------
+  # 10. Agregar frecuencias gnomAD
+  #---------------------------
+  message("\nObteniendo frecuencias poblacionales de gnomAD v4...")
+  source("R/fetch_gnomad.R")
+
+  result$AF_AFR <- NA_real_
+  result$AF_AMR <- NA_real_
+  result$AF_EAS <- NA_real_
+  result$AF_EUR <- NA_real_
+  result$AF_SAS <- NA_real_
+
+  n_gnomad <- 0
+
+  for (i in seq_len(nrow(result))) {
+    if (is.na(result$chr[i]) || is.na(result$pos[i])) next
+
+    ra <- extract_ref_alt_from_hgvs(result$hgvs_c[i])
+
+    af_data <- tryCatch(
+      fetch_gnomad_af(result$chr[i], as.numeric(result$pos[i]),
+                      ref=ra$ref, alt=ra$alt),
+      error = function(e) NULL
+    )
+
+    if (!is.null(af_data) && nrow(af_data) > 0 && any(af_data$af > 0)) {
+      if ("ref" %in% names(af_data) && !is.na(af_data$ref[1]) &&
+          af_data$ref[1] != "na") {
+        result$ref[i] <- af_data$ref[1]
+        result$alt[i] <- af_data$alt[1]
+      }
+      result$AF_AFR[i] <- af_data$af[af_data$pop == "AFR"]
+      result$AF_AMR[i] <- af_data$af[af_data$pop == "AMR"]
+      result$AF_EAS[i] <- af_data$af[af_data$pop == "EAS"]
+      result$AF_EUR[i] <- af_data$af[af_data$pop == "EUR"]
+      result$AF_SAS[i] <- af_data$af[af_data$pop == "SAS"]
+      n_gnomad <- n_gnomad + 1
+    }
+  }
+
+  message("  Variantes con datos en gnomAD: ", n_gnomad)
+  message("  Variantes sin datos en gnomAD: ", nrow(result) - n_gnomad)
+
   result <- result %>%
     select(variant_id, gene, gen_position,
            protein_change, hgvs_c, variant_type,
            ACMG, clinsig, phenotype, dbsnp,
-           chr, pos)
+           chr, pos, ref, alt,
+           AF_AFR, AF_AMR, AF_EAS, AF_EUR, AF_SAS)
 
   return(result)
 }
