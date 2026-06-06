@@ -14,7 +14,8 @@ plot_gene_lolliplot <- function(variants,
                                 label_type = "protein",
                                 grid       = FALSE,
                                 cytobands  = NULL,
-                                breaks     = NULL) {
+                                breaks     = NULL,
+                                gnomad     = FALSE) {
 
   library(ggplot2)
   library(dplyr)
@@ -50,7 +51,6 @@ plot_gene_lolliplot <- function(variants,
   variants$ACMG <- as.character(variants$ACMG)
   variants <- variants[!is.na(variants$pos), ]
 
-  # etiqueta segun disponibilidad de columnas
   # etiqueta segun disponibilidad de columnas
   if (label_type == "cds" && "hgvs_c" %in% names(variants)) {
     variants$label <- ifelse(!is.na(variants$hgvs_c),
@@ -139,7 +139,8 @@ plot_gene_lolliplot <- function(variants,
                    color = "gray50",
                    linewidth = 0.4)
   }
-#---------------------------
+  
+  #---------------------------
   # Exones
   #---------------------------
   if (nrow(exons) > 0) {
@@ -174,8 +175,8 @@ plot_gene_lolliplot <- function(variants,
                   vjust    = 0.5)
     }
   }
-  
 
+  
   #---------------------------
   # Lollipops de variantes
   #---------------------------
@@ -185,16 +186,34 @@ plot_gene_lolliplot <- function(variants,
     ungroup() %>%
     mutate(y_top = 1 + stack * 0.15)
 
-  # usar count si existe, si no size fijo
   has_count <- "count" %in% names(variants)
 
+
+  #---------------------------
+  # Segmentos lollipop
+  #---------------------------
+  p <- p +
+    geom_segment(data = variants,
+                 aes(x = pos, xend = pos,
+                     y = 0.25, yend = y_top,
+                     color = ACMG),
+                 linewidth = 0.6)
+
+  #---------------------------
+  # Pie charts gnomAD (debajo de los puntos)
+  #---------------------------
+  if (gnomad) {
+    source("R/fetch_gnomad.R")
+    source("R/plot_gnomad_pies.R")
+    message("Obteniendo frecuencias poblacionales de gnomAD v4...")
+    p <- add_gnomad_pies(p, variants, acmg_colors)
+  }
+
+  #---------------------------
+  # Puntos ACMG (encima de los pies)
+  #---------------------------
   if (has_count) {
     p <- p +
-      geom_segment(data = variants,
-                   aes(x = pos, xend = pos,
-                       y = 0.25, yend = y_top,
-                       color = ACMG),
-                   linewidth = 0.6) +
       geom_point(data = variants,
                  aes(x = pos, y = y_top,
                      color = ACMG,
@@ -203,11 +222,6 @@ plot_gene_lolliplot <- function(variants,
       scale_size_continuous(range = c(2, 8), name = "Count")
   } else {
     p <- p +
-      geom_segment(data = variants,
-                   aes(x = pos, xend = pos,
-                       y = 0.25, yend = y_top,
-                       color = ACMG),
-                   linewidth = 0.6) +
       geom_point(data = variants,
                  aes(x = pos, y = y_top,
                      color = ACMG),

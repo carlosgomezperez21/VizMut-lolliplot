@@ -77,7 +77,12 @@ make_option("--gene_list",
   make_option("--count",
               type    = "logical",
               default = FALSE,
-              help    = "Deduplicar variantes y escalar lollipops por frecuencia [default: %default]")
+              help    = "Deduplicar variantes y escalar lollipops por frecuencia [default: %default]"),
+
+  make_option("--gnomad",
+              type    = "logical",
+              default = FALSE,
+              help    = "Agregar frecuencias poblacionales de gnomAD v4 [default: %default]")
 
 )
 
@@ -285,15 +290,19 @@ message("Obteniendo estructura del transcrito: ", opt$transcript_id)
   }
 
 message("Generando plot genomico...")
-  p <- plot_gene_lolliplot(
+  
+
+p <- plot_gene_lolliplot(
     variants             = variants_in,
     transcript_structure = struct,
     gene_name            = opt$gene_name,
     label_type           = opt$label_type,
     grid                 = opt$grid,
     cytobands            = bands,
-    breaks               = breaks
+    breaks               = breaks,
+    gnomad               = opt$gnomad
   )
+
 }
 
 #---------------------------
