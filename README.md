@@ -161,15 +161,16 @@ When `--gnomad TRUE` is set, each lollipop head displays a pie chart showing the
 
 ```bash
 Rscript main.R \
-  --variants output/gjb1_enriched.csv \
+  --variants data/variant_kmt2b_toy.csv \
   --plot_type single_gene \
-  --gene_name GJB1 \
-  --transcript_id NM_000166.6 \
+  --gene_name KMT2B \
+  --transcript_id NM_014727.3 \
+  --exons 3
   --gnomad TRUE \
-  --output output/lolliplot_gnomad.png
+  --output output/lolliplot_exons_gnomad.png
 ```
 
-![Gene lolliplot with gnomAD frequencies](examples/gene_gnomad_lolliplot.png)
+![Gene lolliplot with gnomAD frequencies](examples/lolliplot_exons_gnomad.png)
 
 ---
 
