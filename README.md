@@ -16,6 +16,10 @@ A command-line pipeline for visualizing protein and genomic variants as lolliplo
 - **ACMG classification** — real classification fetched from ClinVar via ClinicalTables API
 - **Liftover support** — automatic hg19 → hg38 coordinate conversion via rtracklayer
 - **Enrichment mode** — minimal input (`GENE:c.XXXX`) auto-enriched with coordinates, ACMG, protein notation and gnomAD frequencies
+- **Run log** — detailed log file documenting all pipeline steps, variants not found in ClinVar/gnomAD, liftover summary and output files (`--log`)
+- **UTR visualization** — 5'UTR (green) and 3'UTR (orange) displayed below exons as separate tracks
+- **MANE Select** — canonical transcript automatically selected using NCBI MANE Select standard.
+
 
 ---
 
@@ -302,6 +306,7 @@ Example enrichment output:
 | `--enrich` | Auto-enrich minimal CSV from ClinVar, NCBI and gnomAD v4: `TRUE` or `FALSE` | `FALSE` |
 | `--enrich_output` | Path to save enriched CSV e.g. `output/enriched.csv` | `NULL` |
 | `--output` | Output plot path | `output/lolliplot.png` |
+| `--log` | Path to save run log file (e.g. `output/run.log`) | `NULL` |
 
 ---
 
