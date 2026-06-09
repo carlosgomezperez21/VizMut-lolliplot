@@ -35,12 +35,12 @@ option_list <- list(
               default = NULL,
               help    = "RefSeq transcript ID (ej. NM_014727.3) para single_gene y multi_gene"),
 
-make_option("--gene_list",
+  make_option("--gene_list",
               type    = "character",
               default = "all",
               help    = "Genes a plotear: 'all', lista 'KMT2B,DNMT3A' o ruta a archivo .txt [default: %default]"), 
 
- make_option("--genome",
+  make_option("--genome",
               type    = "character",
               default = "hg38",
               help    = "Ensamble genomico del CSV de variantes: hg38 | hg19 [default: %default]"),
@@ -87,7 +87,12 @@ make_option("--gene_list",
   make_option("--log",
               type    = "character",
               default = NULL,
-              help    = "Ruta para guardar el log del run (ej. output/run.log) [opcional]")
+              help    = "Ruta para guardar el log del run (ej. output/run.log) [opcional]"),
+
+  make_option("--fetch_features",
+              type    = "logical",
+              default = FALSE,
+              help    = "Obtener features proteicos automaticamente desde UniProt [default: %default]")
 
 )
 
@@ -182,23 +187,39 @@ if (opt$count) {
 # Plot tipo: protein
 #---------------------------
 if (plot_type == "protein") {
-
-  if (is.null(opt$features)) stop("--features es requerido para --plot_type protein")
-  if (!file.exists(opt$features)) stop("No se encuentra: ", opt$features)
-  if (is.null(opt$protein_length)) stop("--protein_length es requerido para --plot_type protein")
-
   source("R/parse_features.R")
   source("R/plot_protein_lolliplot.R")
 
-  message("Parseando features...")
-  features_raw <- read.csv(opt$features)
-  features     <- parse_features(features_raw)
-
+  if (opt$fetch_features) {
+    message("Obteniendo features desde UniProt...")
+    source("R/fetch_uniprot.R")
+    features_raw <- fetch_uniprot_features(opt$gene_name)
+    if (is.null(features_raw)) {
+      stop("No se pudieron obtener features desde UniProt para: ", opt$gene_name)
+    }
+    features <- features_raw
+    if (is.null(opt$protein_length)) {
+      opt$protein_length <- attr(features_raw, "protein_len")
+      message("Longitud proteica desde UniProt: ", opt$protein_length, " aa")
+    }
+    features <- parse_features(features)
+  } else {
+    if (is.null(opt$features))
+      stop("--features es requerido (o usa --fetch_features TRUE)")
+    if (!file.exists(opt$features))
+      stop("No se encuentra: ", opt$features)
+    if (is.null(opt$protein_length))
+      stop("--protein_length es requerido para --plot_type protein")
+    message("Parseando features...")
+    features_raw <- read.csv(opt$features)
+    features     <- parse_features(features_raw)
+  }
+  
   meta <- list(
-    gene    = list(name   = opt$gene_name,
-                   chr    = unique(variants$chr)[1],
-                   start  = min(variants$pos, na.rm = TRUE),
-                   end    = max(variants$pos, na.rm = TRUE),
+    gene    = list(name  = opt$gene_name,
+                   chr   = unique(variants$chr)[1],
+                   start = min(variants$pos, na.rm=TRUE),
+                   end   = max(variants$pos, na.rm=TRUE),
                    strand = "+"),
     protein = list(id     = opt$gene_name,
                    length = opt$protein_length)
@@ -206,10 +227,10 @@ if (plot_type == "protein") {
 
   message("Validando variantes...")
   validate_variants(variants, meta)
-
   message("Generando plot proteico...")
-  p <- plot_protein_lolliplot(variants, features, meta, grid = opt$grid)
+  p <- plot_protein_lolliplot(variants, features, meta, grid=opt$grid)
 }
+
 
 #---------------------------
 # Plot tipo: single_gene
@@ -434,8 +455,10 @@ if (!is.null(opt$log)) {
   write_run_log(log_data, opt$log)
 }
 
+plot_width <- ifelse(plot_type == "protein", 20, 14)
+
 ggplot2::ggsave(opt$output, p,
-                width  = 14,
+                width  = plot_width,
                 height = plot_height,
                 dpi    = 300,
                 limitsize = FALSE)

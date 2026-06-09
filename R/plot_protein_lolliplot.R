@@ -98,7 +98,11 @@ plot_protein_lolliplot <- function(variants,
     annotate("segment",
              x = 0, xend = protein_length,
              y = 0, yend = 0,
-             linewidth = 2.5)
+             linewidth = 2.5) +
+    scale_x_continuous(
+      limits = c(-protein_length * 0.04, protein_length * 1.04),
+      labels = scales::comma
+    )
 
   #---------------------------
   # DOMAINS
@@ -110,7 +114,8 @@ plot_protein_lolliplot <- function(variants,
                     ymin = -0.15, ymax = -0.05,
                     fill = name),
                 alpha = 0.9) +
-      scale_fill_manual(values = domain_colors, name = "Domain")
+      scale_fill_manual(values = domain_colors, name = "Domain",
+                        guide = guide_legend(nrow=1, title.position="left"))
   }
 
   #---------------------------
@@ -124,7 +129,8 @@ plot_protein_lolliplot <- function(variants,
                     ymin = -0.30, ymax = -0.18,
                     fill = name),
                 alpha = 0.9) +
-      scale_fill_manual(values = motif_colors, name = "Motif")
+      scale_fill_manual(values = motif_colors, name = "Motif",
+                        guide = guide_legend(nrow=1, title.position="left"))
   }
 
   #---------------------------
@@ -143,7 +149,9 @@ plot_protein_lolliplot <- function(variants,
                  shape = 21,
                  size  = 3,
                  color = "black") +
-      scale_fill_manual(values = ptm_colors, name = "PTM")
+      scale_fill_manual(values = ptm_colors, name = "PTM",
+                        guide = guide_legend(nrow=1, title.position="left"))
+
   }
 
   #---------------------------
@@ -157,7 +165,8 @@ plot_protein_lolliplot <- function(variants,
                     ymin = -0.58, ymax = -0.46,
                     fill = name),
                 alpha = 0.9) +
-      scale_fill_manual(values = zf_colors, name = "Zinc Finger")
+      scale_fill_manual(values = zf_colors, name = "Zinc Finger",
+                        guide = guide_legend(nrow=1, title.position="left"))
   }
 
   #---------------------------
@@ -173,7 +182,8 @@ plot_protein_lolliplot <- function(variants,
                aes(x = protein_pos, y = 1,
                    color = ACMG),
                size = 3) +
-    scale_color_manual(values = acmg_colors, name = "ACMG")
+    scale_color_manual(values = acmg_colors, name = "ACMG",
+                       guide = guide_legend(nrow=1, title.position="left"))
 
   # labels P y LP
   p <- p +
@@ -207,25 +217,26 @@ plot_protein_lolliplot <- function(variants,
       x     = "Amino acid position",
       y     = ""
     ) +
-    scale_x_continuous(
-      breaks = c(0, 500, 1000, 1500, 2000, protein_length),
-      labels = c("0", "500", "1000", "1500", "2000",
-                 as.character(protein_length)),
-      expand = c(0.1, 0)
+    guides(
+      fill  = guide_legend(nrow = 2, title.position = "left",
+                           override.aes = list(size = 3)),
+      color = guide_legend(nrow = 1, title.position = "left",
+                           override.aes = list(size = 3))
     ) +
     theme(
-      legend.position  = "right",
-      legend.title     = element_text(size = 7, face = "bold"),
-      legend.text      = element_text(size = 6),
-      legend.key.size  = unit(0.25, "cm"),
-      legend.box       = "vertical",
-      axis.title.y     = element_blank(),
-      axis.text.y      = element_blank(),
-      axis.ticks.y     = element_blank()
-    ) +
-    guides(
-      fill  = guide_legend(ncol = 1, title.position = "top"),
-      color = guide_legend(ncol = 1, title.position = "top")
+      legend.position   = "bottom",
+      legend.direction  = "horizontal",
+      legend.title      = element_text(size = 6, face = "bold"),
+      legend.text       = element_text(size = 5),
+      legend.key.size   = unit(0.2, "cm"),
+      legend.box        = "horizontal",
+      legend.box.just   = "left",
+      legend.spacing.x  = unit(0.15, "cm"),
+      legend.spacing.y  = unit(0.05, "cm"),
+      legend.margin     = margin(0, 0, 0, 0),
+      axis.title.y      = element_blank(),
+      axis.text.y       = element_blank(),
+      axis.ticks.y      = element_blank()
     )
 
   return(p)
