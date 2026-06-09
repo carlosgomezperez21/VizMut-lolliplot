@@ -20,6 +20,7 @@ A command-line pipeline for visualizing protein and genomic variants as lolliplo
 - **UTR visualization** — 5'UTR (green) and 3'UTR (orange) displayed below exons as separate tracks
 - **MANE Select** — canonical transcript automatically selected using NCBI MANE Select standard.
 - **Automatic protein features from UniProt** — domains, motifs, PTMs and zinc fingers fetched automatically from UniProt REST API (`--fetch_features TRUE`)
+- **Unit tests** — 32 tests with `testthat` covering core functions
 
 ---
 
