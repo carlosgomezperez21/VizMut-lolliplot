@@ -82,11 +82,27 @@ make_option("--gene_list",
   make_option("--gnomad",
               type    = "logical",
               default = FALSE,
-              help    = "Agregar frecuencias poblacionales de gnomAD v4 [default: %default]")
+              help    = "Agregar frecuencias poblacionales de gnomAD v4 [default: %default]"),
+
+  make_option("--log",
+              type    = "character",
+              default = NULL,
+              help    = "Ruta para guardar el log del run (ej. output/run.log) [opcional]")
 
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
+
+# inicializar log_data
+log_data <- list(
+  command       = paste(c("Rscript main.R", commandArgs(trailingOnly=TRUE)),
+                        collapse=" "),
+  variants_file = opt$variants,
+  plot_type     = opt$plot_type,
+  gene_name     = opt$gene_name,
+  output_plot   = opt$output,
+  output_enrich = opt$enrich_output
+)
 
 #---------------------------
 # Validacion general
@@ -143,6 +159,15 @@ if (opt$enrich) {
     message("CSV enriquecido guardado en: ", opt$enrich_output)
   }
 
+# capturar info para log
+  log_data$enrich <- list(
+    total              = nrow(variants_raw),
+    found_clinvar      = sum(variants$clinsig != "Not found in ClinVar",
+                             na.rm=TRUE),
+    not_found_clinvar  = sum(variants$clinsig == "Not found in ClinVar",
+                             na.rm=TRUE),
+    not_found_list     = variants$hgvs_c[variants$clinsig == "Not found in ClinVar"]
+  )
 
 #---------------------------
 # Deduplicacion opcional
@@ -235,6 +260,11 @@ if (plot_type == "single_gene") {
     lifted  <- sapply(gr_hg38, function(x) if (length(x) == 1) start(x) else NA)
     variants$pos[valid] <- lifted
     message("Liftover completado")
+     # capturar info para log
+     log_data$liftover <- list(
+       success = sum(!is.na(lifted)),
+       failed  = sum(is.na(lifted))
+     )
   }
 
 # obtener citobandas para ideograma
@@ -247,6 +277,13 @@ message("Obteniendo estructura del transcrito: ", opt$transcript_id)
   exon_filter <- filter_exons(struct, exon_sel)
   struct      <- exon_filter$structure
   breaks      <- exon_filter$breaks
+
+  log_data$exons <- list(
+    selected = paste(exon_sel, collapse=","),
+    total    = nrow(struct[struct$type == "exon", ]),
+    excluded = ifelse(exists("n_excl"), n_excl, 0)
+  )
+
 
   # citobandas
   message("Obteniendo citobandas...")
@@ -266,7 +303,9 @@ message("Obteniendo estructura del transcrito: ", opt$transcript_id)
   if (n_out > 0) {
     message("Nota: ", n_out, " variantes fuera del transcrito fueron excluidas")
   }
-
+ 
+  log_data$excluded <- list(outside_transcript = n_out)
+  
   # excluir variantes fuera de los exones/intrones seleccionados
   if (!is.null(exon_sel)) {
     n_before <- nrow(variants_in)
@@ -388,6 +427,12 @@ plot_height <- switch(plot_type,
     n_genes * 7
   }
 )
+
+# escribir log si se especifica
+if (!is.null(opt$log)) {
+  source("R/write_run_log.R")
+  write_run_log(log_data, opt$log)
+}
 
 ggplot2::ggsave(opt$output, p,
                 width  = 14,
