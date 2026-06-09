@@ -95,32 +95,6 @@ plot_gene_lolliplot <- function(variants,
   }
 
   #---------------------------
-  # UTR5
-  #---------------------------
-  if (nrow(utr5) > 0) {
-    p <- p +
-      geom_rect(data = utr5,
-                aes(xmin = start, xmax = end,
-                    ymin = -0.15, ymax = 0.15),
-                fill = "#B0BEC5",
-                color = "gray40",
-                linewidth = 0.3)
-  }
-
-  #---------------------------
-  # UTR3
-  #---------------------------
-  if (nrow(utr3) > 0) {
-    p <- p +
-      geom_rect(data = utr3,
-                aes(xmin = start, xmax = end,
-                    ymin = -0.15, ymax = 0.15),
-                fill = "#B0BEC5",
-                color = "gray40",
-                linewidth = 0.3)
-  }
-
-  #---------------------------
   # Intrones
   #---------------------------
   if (nrow(introns) > 0) {
@@ -140,6 +114,7 @@ plot_gene_lolliplot <- function(variants,
                    linewidth = 0.4)
   }
   
+  
   #---------------------------
   # Exones
   #---------------------------
@@ -148,20 +123,20 @@ plot_gene_lolliplot <- function(variants,
       geom_rect(data = exons,
                 aes(xmin = start, xmax = end,
                     ymin = -0.25, ymax = 0.25),
-                fill = "#4A90D9",
-                color = "#2C5F8A",
+                fill      = "#4A90D9",
+                color     = "#2C5F8A",
                 linewidth = 0.3)
 
-    # etiquetas solo en exones suficientemente anchos
-    total_range  <- gene_end - gene_start
-    min_width    <- total_range * 0.03  # exon debe ser >3% del rango total
+    # etiquetas en exones anchos
+    total_range <- gene_end - gene_start
+    min_width   <- total_range * 0.03
 
     exons_label <- exons %>%
       mutate(
-        width     = end - start,
-        mid       = (start + end) / 2,
-        exon_num  = as.integer(sub("exon_", "", name)),
-        label     = paste("Exon", exon_num)
+        width    = end - start,
+        mid      = (start + end) / 2,
+        exon_num = as.integer(sub("exon_", "", name)),
+        label    = paste("Exon", exon_num)
       ) %>%
       filter(width >= min_width)
 
@@ -176,7 +151,61 @@ plot_gene_lolliplot <- function(variants,
     }
   }
 
+  #---------------------------
+  # UTRs debajo de los exones
+  #---------------------------
+  utr_y_mid  <- -0.4
+  utr_height <- 0.07 
+
+  # linea conectora entre UTRs
+  if (nrow(utr5) > 0 || nrow(utr3) > 0) {
+    p <- p +
+      annotate("segment",
+               x    = gene_start, xend = gene_end,
+               y    = utr_y_mid,  yend = utr_y_mid,
+               color     = "gray60",
+               linewidth = 0.3,
+               linetype  = "dashed")
+  }
+
+
+  if (nrow(utr5) > 0) {
+    p <- p +
+      geom_rect(data = utr5,
+                aes(xmin = start, xmax = end,
+                    ymin = utr_y_mid - utr_height,
+                    ymax = utr_y_mid + utr_height),
+                fill      = "#8FBC8F",
+                color     = "#5A8A5A",
+                linewidth = 0.3) +
+      geom_text(data = utr5 %>%
+                  mutate(mid = (start + end) / 2) %>%
+                  filter((end - start) > total_range * 0.01),
+                aes(x = mid, y = utr_y_mid, label = "5'UTR"),
+                size    = 2,
+                color   = "white",
+                fontface = "bold")
+  }
+
+  if (nrow(utr3) > 0) {
+    p <- p +
+      geom_rect(data = utr3,
+                aes(xmin = start, xmax = end,
+                    ymin = utr_y_mid - utr_height,
+                    ymax = utr_y_mid + utr_height),
+                fill      = "#CD853F",
+                color     = "#8B5A2B",
+                linewidth = 0.3) +
+      geom_text(data = utr3 %>%
+                  mutate(mid = (start + end) / 2) %>%
+                  filter((end - start) > total_range * 0.01),
+                aes(x = mid, y = utr_y_mid, label = "3'UTR"),
+                size    = 2,
+                color   = "white",
+                fontface = "bold")
+  }
   
+
   #---------------------------
   # Lollipops de variantes
   #---------------------------

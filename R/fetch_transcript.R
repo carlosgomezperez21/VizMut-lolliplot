@@ -150,35 +150,107 @@ fetch_transcript_structure <- function(transcript_id) {
   ) %>% arrange(start)
 
   #---------------------------
-  # 5. UTRs
+  # 5. Calcular UTRs desde CDS en coordenadas mRNA
   #---------------------------
   utr5_df <- tibble(type=character(), start=numeric(), end=numeric(),
                     strand=integer(), chr=character(), name=character())
   utr3_df <- utr5_df
 
-  cds_genomic <- tryCatch(
-    genomic_loc$cds_genomic_range,
+  # obtener rango CDS en mRNA
+  cds_mrna <- tryCatch(
+    target_transcript$cds$range[[1]],
     error = function(e) NULL
   )
 
-  if (!is.null(cds_genomic)) {
-    cds_start <- as.numeric(cds_genomic$begin) + 1
-    cds_end   <- as.numeric(cds_genomic$end)
-    tx_start  <- min(exon_df$start)
-    tx_end    <- max(exon_df$end)
+  if (!is.null(cds_mrna)) {
+    cds_mrna_start <- as.numeric(cds_mrna$begin) + 1  # 1-based
+    cds_mrna_end   <- as.numeric(cds_mrna$end)
 
-    if (strand == 1) {
-      if (tx_start < cds_start)
-        utr5_df <- tibble(type="utr5", start=tx_start,
-                          end=cds_start-1, strand=strand,
-                          chr=chr, name="5'UTR")
-      if (tx_end > cds_end)
-        utr3_df <- tibble(type="utr3", start=cds_end+1,
-                          end=tx_end, strand=strand,
-                          chr=chr, name="3'UTR")
+    message("CDS en mRNA: ", cds_mrna_start, " - ", cds_mrna_end)
+
+    # mapear coordenadas mRNA a genomico recorriendo exones en orden
+    
+   strand_val    <- exon_df$strand[1]
+    exons_ordered <- if (strand_val == 1) {
+      exon_df %>% arrange(start)
+    } else {
+      exon_df %>% arrange(desc(start))
     }
+
+    mrna_pos <- 0  # posicion acumulada en mRNA
+
+    utr5_regions <- list()
+    utr3_regions <- list()
+
+    for (k in seq_len(nrow(exons_ordered))) {
+      ex_start  <- exons_ordered$start[k]
+      ex_end    <- exons_ordered$end[k]
+      ex_len    <- ex_end - ex_start + 1
+
+      mrna_ex_start <- mrna_pos + 1
+      mrna_ex_end   <- mrna_pos + ex_len
+
+      # region de este exon en mRNA
+      # overlap con 5'UTR (antes del CDS)
+      if (mrna_ex_start < cds_mrna_start) {
+        utr5_end_mrna <- min(mrna_ex_end, cds_mrna_start - 1)
+        utr5_len      <- utr5_end_mrna - mrna_ex_start + 1
+
+        if (strand == 1) {
+          g_start <- ex_start
+          g_end   <- ex_start + utr5_len - 1
+        } else {
+          g_end   <- ex_end
+          g_start <- ex_end - utr5_len + 1
+        }
+
+        utr5_regions[[length(utr5_regions)+1]] <- tibble(
+          type   = "utr5",
+          start  = g_start,
+          end    = g_end,
+          strand = strand_val,
+          chr    = chr,
+          name   = "5'UTR"
+        )
+      }
+
+      # overlap con 3'UTR (despues del CDS)
+      if (mrna_ex_end > cds_mrna_end) {
+        utr3_start_mrna <- max(mrna_ex_start, cds_mrna_end + 1)
+        utr3_len        <- mrna_ex_end - utr3_start_mrna + 1
+        offset          <- utr3_start_mrna - mrna_ex_start
+
+        if (strand == 1) {
+          g_start <- ex_start + offset
+          g_end   <- ex_end
+        } else {
+          g_end   <- ex_end - offset
+          g_start <- ex_start
+        }
+
+        utr3_regions[[length(utr3_regions)+1]] <- tibble(
+          type   = "utr3",
+          start  = g_start,
+          end    = g_end,
+          strand = strand,
+          chr    = chr,
+          name   = "3'UTR"
+        )
+      }
+
+      mrna_pos <- mrna_ex_end
+    }
+
+    if (length(utr5_regions) > 0)
+      utr5_df <- bind_rows(utr5_regions)
+    if (length(utr3_regions) > 0)
+      utr3_df <- bind_rows(utr3_regions)
+
+    message("UTRs calculados: ",
+            nrow(utr5_df), " regiones 5'UTR, ",
+            nrow(utr3_df), " regiones 3'UTR")
   } else {
-    message("No se encontraron coordenadas genomicas del CDS")
+    message("No se encontraron coordenadas del CDS en mRNA")
   }
 
   #---------------------------
