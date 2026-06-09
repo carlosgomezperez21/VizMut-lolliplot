@@ -19,7 +19,7 @@ A command-line pipeline for visualizing protein and genomic variants as lolliplo
 - **Run log** — detailed log file documenting all pipeline steps, variants not found in ClinVar/gnomAD, liftover summary and output files (`--log`)
 - **UTR visualization** — 5'UTR (green) and 3'UTR (orange) displayed below exons as separate tracks
 - **MANE Select** — canonical transcript automatically selected using NCBI MANE Select standard.
-
+- **Automatic protein features from UniProt** — domains, motifs, PTMs and zinc fingers fetched automatically from UniProt REST API (`--fetch_features TRUE`)
 
 ---
 
@@ -121,6 +121,21 @@ Rscript main.R \
 ```
 
 ![Protein grid lolliplot](examples/protein_grid_lolliplot.png)
+
+---
+
+### Protein lolliplot with automatic UniProt features (`--fetch_features TRUE`)
+
+When `--fetch_features TRUE` is set, the pipeline automatically retrieves protein features from UniProt using the gene symbol. This includes domains, motifs, PTMs, zinc fingers and binding sites. The protein length is also retrieved automatically — no need to provide `--features` or `--protein_length`.
+
+```bash
+Rscript main.R \
+  --variants data/variant_kmt2b_toy.csv \
+  --plot_type protein \
+  --gene_name KMT2B \
+  --fetch_features TRUE \
+  --output output/lolliplot_protein_uniprot.png
+```
 
 ---
 
@@ -307,6 +322,7 @@ Example enrichment output:
 | `--enrich_output` | Path to save enriched CSV e.g. `output/enriched.csv` | `NULL` |
 | `--output` | Output plot path | `output/lolliplot.png` |
 | `--log` | Path to save run log file (e.g. `output/run.log`) | `NULL` |
+| `--fetch_features` | Fetch protein features automatically from UniProt: `TRUE` or `FALSE` | `FALSE` |
 
 ---
 
