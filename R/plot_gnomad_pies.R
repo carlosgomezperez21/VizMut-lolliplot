@@ -10,6 +10,14 @@ add_gnomad_pies <- function(p, variants, acmg_colors) {
     "SAS" = "#984EA3"
   )
 
+  # verificar que existan las columnas de frecuencias precalculadas
+  af_cols <- c("AF_AFR", "AF_AMR", "AF_EAS", "AF_EUR", "AF_SAS")
+  if (!all(af_cols %in% names(variants))) {
+    message("No se encontraron columnas de frecuencias gnomAD en el CSV.")
+    message("Usa --enrich TRUE para obtener las frecuencias automaticamente.")
+    return(p)
+  }
+
   gene_range <- max(variants$pos, na.rm=TRUE) - min(variants$pos, na.rm=TRUE)
   r_y        <- 0.06
   r_x        <- r_y * (gene_range / 1.5) * (7 / 14)
@@ -18,34 +26,31 @@ add_gnomad_pies <- function(p, variants, acmg_colors) {
 
   for (i in seq_len(nrow(variants))) {
 
-    chr_i <- as.character(variants$chr[i])
     pos_i <- as.numeric(variants$pos[i])
     vid_i <- as.character(variants$variant_id[i])
     y_i   <- as.numeric(variants$y_top[i])
 
-    if (is.na(pos_i) || is.na(chr_i)) next
-      if (length(vid_i) == 0 || is.na(vid_i) || vid_i == "") next
-      if (length(y_i) == 0 || is.na(y_i)) next
+    if (is.na(pos_i)) next
+    if (length(vid_i) == 0 || is.na(vid_i) || vid_i == "") next
+    if (length(y_i) == 0 || is.na(y_i)) next
 
-    af_raw <- tryCatch(
-      fetch_gnomad_af(chr_i, pos_i),
-      error = function(e) NULL
-    )
-
-    if (is.null(af_raw) || nrow(af_raw) == 0) next
-
-    # forzar tipos y verificar
+    # usar frecuencias ya calculadas en el CSV enriquecido
     af_data <- data.frame(
-      pop = as.character(af_raw$pop),
-      af  = as.numeric(af_raw$af),
+      pop = c("AFR", "AMR", "EAS", "EUR", "SAS"),
+      af  = c(
+        as.numeric(variants$AF_AFR[i]),
+        as.numeric(variants$AF_AMR[i]),
+        as.numeric(variants$AF_EAS[i]),
+        as.numeric(variants$AF_EUR[i]),
+        as.numeric(variants$AF_SAS[i])
+      ),
       stringsAsFactors = FALSE
     )
 
-    # verificar que pop no tiene vacios
-    af_data <- af_data[nchar(af_data$pop) > 0 & !is.na(af_data$pop), ]
+    af_data <- af_data[!is.na(af_data$af), ]
     if (nrow(af_data) == 0) next
 
-   af_sum <- sum(af_data$af)
+    af_sum <- sum(af_data$af)
     if (af_sum == 0 || !is.finite(af_sum)) next
 
     current_angle <- -pi / 2
@@ -95,14 +100,6 @@ add_gnomad_pies <- function(p, variants, acmg_colors) {
   message("\nResumen gnomAD v4:")
   message("  Variantes con frecuencia poblacional: ", n_pies)
   message("  Variantes sin datos en gnomAD: ", n_no_af)
-
-  if (n_no_af > 0 && "hgvs_c" %in% names(variants)) {
-    no_af <- variants$hgvs_c[!variants$variant_id %in%
-                               unique(pie_df$variant_id) &
-                               !is.na(variants$pos)]
-    message("  Lista:")
-    for (v in unique(no_af)) message("    - ", v)
-  }
 
   p <- p +
     geom_polygon(
