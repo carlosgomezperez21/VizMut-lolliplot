@@ -30,17 +30,51 @@ A command-line pipeline for visualizing protein and genomic variants as lolliplo
 
 - R >= 4.1.0
 
+### System dependencies (Ubuntu/Debian)
+
+Before installing R packages, install the required system libraries:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+  libcurl4-openssl-dev libssl-dev libxml2-dev \
+  libgit2-dev libfontconfig1-dev libharfbuzz-dev \
+  libfribidi-dev libfreetype6-dev libpng-dev \
+  libtiff5-dev libjpeg-dev libuv1-dev \
+  libcairo2-dev libxt-dev
+```
+
+### Quick install
+
+Clone the repository and install all R dependencies with a single command:
+
+```bash
+git clone https://github.com/carlosgomezperez21/VizMut-lolliplot.git
+cd VizMut-lolliplot
+Rscript install_dependencies.R
+```
+
+The script installs all required CRAN and Bioconductor packages, cleans up stale lock files automatically, and prints a final verification report.
+
+### Manual installation
+
 ```r
 # CRAN
 install.packages(c(
   'optparse', 'dplyr', 'stringr', 'ggplot2', 'ggrepel',
   'RColorBrewer', 'ggnewscale', 'httr', 'jsonlite',
-  'xml2', 'R.utils', 'scales', 'patchwork'
+  'xml2', 'R.utils', 'scales', 'patchwork', 'testthat'
 ))
 
 # Bioconductor
-BiocManager::install(c('rtracklayer', 'GenomicRanges'))
+if (!requireNamespace("BiocManager", quietly=TRUE))
+  install.packages("BiocManager")
+BiocManager::install(c('GenomicAlignments', 'GenomicRanges', 'rtracklayer'))
 ```
+
+### Troubleshooting
+
+If `rtracklayer` or `GenomicAlignments` fail to install, it's almost always because the system dependencies above are missing. Install them first, then re-run `Rscript install_dependencies.R`.
 
 ---
 
