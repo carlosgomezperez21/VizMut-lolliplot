@@ -128,12 +128,11 @@ Variants are plotted as vertical lollipops above a horizontal protein backbone. 
 ```bash
 Rscript main.R \
   --variants data/variant_kmt2b_toy.csv \
-  --plot_type single_gene \
+  --features data/features_kmt2b_toy.csv \
+  --plot_type protein \
   --gene_name KMT2B \
-  --transcript_id NM_014727.3 \
-  --exons 3 \
-  --gnomad TRUE \
-  --output output/lolliplot_gnomad.png
+  --protein_length 2715 \
+  --output output/lolliplot_protein.png
 ```
 
 ![Protein lolliplot](examples/protein_lolliplot.png)
