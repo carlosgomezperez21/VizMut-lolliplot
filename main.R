@@ -92,7 +92,12 @@ option_list <- list(
   make_option("--fetch_features",
               type    = "logical",
               default = FALSE,
-              help    = "Obtener features proteicos automaticamente desde UniProt [default: %default]")
+              help    = "Obtener features proteicos automaticamente desde UniProt [default: %default]"),
+
+  make_option("--show_only",
+              type    = "character",
+              default = NULL,
+              help    = "Filtrar variantes a graficar. Formato: 'acmg=P,LP type=SNV phenotype=ALS'")
 
 )
 
@@ -146,6 +151,18 @@ if (opt$enrich) {
   )
 } else {
   variants <- parse_variants(variants_raw)
+}
+
+
+#---------------------------
+# Filtro --show_only
+#---------------------------
+if (!is.null(opt$show_only)) {
+  source("R/filter_variants.R")
+  n_before <- nrow(variants)
+  variants  <- filter_variants(variants, opt$show_only)
+  message("Filtro --show_only: ", n_before - nrow(variants),
+          " variantes excluidas, ", nrow(variants), " graficadas")
 }
 
 # exportar CSV enriquecido si se especifica
