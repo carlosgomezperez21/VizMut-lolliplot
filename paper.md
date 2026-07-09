@@ -18,6 +18,8 @@ affiliations:
     index: 1
 date: 2026-07-08
 bibliography: paper.bib
+archive_doi: 10.5281/zenodo.21285302
+repository-code: https://github.com/carlosgomezperez21/VizMut-lolliplot
 ---
 
 # Summary
