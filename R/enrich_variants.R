@@ -213,6 +213,8 @@ enrich_variants <- function(variants, genome = "hg38") {
       if (is.null(val) || length(val) == 0) NA else val
     }
 
+    clinsig_raw <- safe(extras, "ClinicalSignificance")
+
         acmg <- dplyr::case_when(
       grepl("^Pathogenic$", clinsig_raw, ignore.case=TRUE)                  ~ "P",
       grepl("^Likely pathogenic$", clinsig_raw, ignore.case=TRUE)           ~ "LP",
