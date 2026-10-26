@@ -15,6 +15,8 @@ plot_gene_lolliplot <- function(variants,
                                 grid       = FALSE,
                                 cytobands  = NULL,
                                 breaks     = NULL,
+                                label_all  = FALSE,
+                                legend_size= 6,
                                 gnomad     = FALSE) {
 
   library(ggplot2)
@@ -24,21 +26,28 @@ plot_gene_lolliplot <- function(variants,
   #---------------------------
   # ACMG colors
   #---------------------------
-  acmg_colors <- c(
-    "P"   = "#D73027",
-    "LP"  = "#FC8D59",
-    "VUS" = "#BDBDBD",
-    "LB"  = "#91BFDB",
-    "B"   = "#1A9850"
+    acmg_colors <- c(
+    "P"           = "#D73027",
+    "LP"          = "#FC8D59",
+    "P/LP"        = "#F46D43",
+    "VUS"         = "#BDBDBD",
+    "LB"          = "#91BFDB",
+    "B"           = "#1A9850",
+    "Conflicting" = "#9E66AB",
+    "RF"          = "#D9B600",
+    "DR"          = "#3288BD",
+    "NP"          = "#969696",
+    "Other"       = "#636363",
+    "NA"          = "#525252"
   )
 
   #---------------------------
   # Preparar estructura del transcrito
   #---------------------------
-  exons   <- transcript_structure %>% filter(type == "exon")
-  introns <- transcript_structure %>% filter(type == "intron")
-  utr5    <- transcript_structure %>% filter(type == "utr5")
-  utr3    <- transcript_structure %>% filter(type == "utr3")
+  exons   <- transcript_structure %>% filter(type == "Exon")
+  introns <- transcript_structure %>% filter(type == "Intron")
+  utr5    <- transcript_structure %>% filter(type == "UTR5")
+  utr3    <- transcript_structure %>% filter(type == "UTR3")
 
   gene_start <- min(transcript_structure$start)
   gene_end   <- max(transcript_structure$end)
@@ -261,11 +270,15 @@ plot_gene_lolliplot <- function(variants,
   #---------------------------
   # Etiquetas P y LP
   #---------------------------
+  label_data <- if (label_all) variants else {
+    variants %>% filter(ACMG %in% c("P", "LP") | is.na(ACMG))
+  }
+
   p <- p +
     geom_text_repel(
-      data = variants %>% filter(ACMG %in% c("P", "LP") | is.na(ACMG)),
+      data = label_data,
       aes(x = pos, y = y_top, label = label),
-      size = 2,
+      size = 4,
       min.segment.length = 0,
       box.padding = 0.4,
       nudge_y = 0.2
@@ -304,8 +317,8 @@ plot_gene_lolliplot <- function(variants,
       panel.grid.major.x = element_line(color = "gray90"),
       panel.grid.minor.x = element_blank(),
       legend.position    = "bottom",
-      legend.title       = element_text(size = 8, face = "bold"),
-      legend.text        = element_text(size = 7),
+      legend.text  = element_text(size = legend_size),
+      legend.title = element_text(size = legend_size + 1, face = "bold"),
       legend.key.size    = unit(0.3, "cm"),
       plot.margin        = margin(10, 15, 10, 15)
     )

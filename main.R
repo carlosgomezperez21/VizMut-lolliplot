@@ -45,6 +45,16 @@ option_list <- list(
               default = "hg38",
               help    = "Ensamble genomico del CSV de variantes: hg38 | hg19 [default: %default]"),
 
+  make_option("--width",
+              type    = "double",
+              default = NULL,
+              help    = "Ancho del plot en pulgadas [default: auto]"),
+
+  make_option("--height",
+              type    = "double",
+              default = NULL,
+              help    = "Alto del plot en pulgadas [default: auto]"),
+
   make_option("--grid",
               type    = "logical",
               default = FALSE,
@@ -97,7 +107,17 @@ option_list <- list(
   make_option("--show_only",
               type    = "character",
               default = NULL,
-              help    = "Filtrar variantes a graficar. Formato: 'acmg=P,LP type=SNV phenotype=ALS'")
+              help    = "Filtrar variantes a graficar. Formato: 'acmg=P,LP type=SNV phenotype=ALS'"),
+
+  make_option("--legend_size",
+              type    = "double",
+              default = 6,
+              help    = "Tamaño del texto de la leyenda [default: %default]"),
+
+  make_option("--label_all",
+              type    = "logical",
+              default = FALSE,
+              help    = "Mostrar etiquetas para todas las variantes [default: %default]")
 
 )
 
@@ -177,7 +197,7 @@ if (!is.null(opt$show_only)) {
                   ","
     )
     write.table(variants, opt$enrich_output,
-                sep = sep, row.names = FALSE, quote = FALSE)
+                sep = sep, row.names = FALSE, quote = TRUE)
     message("CSV enriquecido guardado en: ", opt$enrich_output)
   }
 
@@ -377,7 +397,8 @@ p <- plot_gene_lolliplot(
     grid                 = opt$grid,
     cytobands            = bands,
     breaks               = breaks,
-    gnomad               = opt$gnomad
+    gnomad               = opt$gnomad,
+    label_all           = opt$label_all
   )
 
 }
@@ -472,7 +493,8 @@ if (!is.null(opt$log)) {
   write_run_log(log_data, opt$log)
 }
 
-plot_width <- ifelse(plot_type == "protein", 20, 14)
+plot_width  <- if (!is.null(opt$width))  opt$width  else ifelse(plot_type == "protein", 20, 14)
+plot_height <- if (!is.null(opt$height)) opt$height else plot_height
 
 ggplot2::ggsave(opt$output, p,
                 width  = plot_width,

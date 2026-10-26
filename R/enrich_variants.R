@@ -116,6 +116,14 @@ enrich_variants <- function(variants, genome = "hg38") {
   }
 
   #---------------------------
+  # 1b. Validar formato de hgvs_c
+  #---------------------------
+  if (!any(grepl(":", variants$hgvs_c))) {
+    stop("hgvs_c debe incluir el simbolo del gen como prefijo (ej. GJB1:c.164C>T). ",
+         "Agrega el prefijo del gen antes de correr --enrich TRUE.")
+  }
+  
+  #---------------------------
   # 2. Extraer gen y construir hgvs_c completo
   #---------------------------
   message("Extrayendo simbolos de genes desde hgvs_c...")
@@ -205,16 +213,19 @@ enrich_variants <- function(variants, genome = "hg38") {
       if (is.null(val) || length(val) == 0) NA else val
     }
 
-    clinsig_raw <- safe(extras, "ClinicalSignificance")
-    acmg <- dplyr::case_when(
-      grepl("^Pathogenic$", clinsig_raw, ignore.case=TRUE)                 ~ "P",
-      grepl("Pathogenic/Likely pathogenic", clinsig_raw, ignore.case=TRUE) ~ "LP",
-      grepl("^Likely pathogenic$", clinsig_raw, ignore.case=TRUE)          ~ "LP",
-      grepl("^Uncertain significance$", clinsig_raw, ignore.case=TRUE)     ~ "VUS",
-      grepl("^Likely benign$", clinsig_raw, ignore.case=TRUE)              ~ "LB",
-      grepl("Benign/Likely benign", clinsig_raw, ignore.case=TRUE)         ~ "LB",
-      grepl("^Benign$", clinsig_raw, ignore.case=TRUE)                     ~ "B",
-      TRUE                                                                  ~ "VUS"
+        acmg <- dplyr::case_when(
+      grepl("^Pathogenic$", clinsig_raw, ignore.case=TRUE)                  ~ "P",
+      grepl("^Likely pathogenic$", clinsig_raw, ignore.case=TRUE)           ~ "LP",
+      grepl("Pathogenic/Likely pathogenic", clinsig_raw, ignore.case=TRUE)  ~ "P/LP",
+      grepl("^Uncertain significance$", clinsig_raw, ignore.case=TRUE)      ~ "VUS",
+      grepl("^Likely benign$", clinsig_raw, ignore.case=TRUE)               ~ "LB",
+      grepl("Benign/Likely benign", clinsig_raw, ignore.case=TRUE)          ~ "LB",
+      grepl("^Benign$", clinsig_raw, ignore.case=TRUE)                      ~ "B",
+      grepl("Conflicting", clinsig_raw, ignore.case=TRUE)                   ~ "Conflicting",
+      grepl("risk factor", clinsig_raw, ignore.case=TRUE)                   ~ "RF",
+      grepl("drug response", clinsig_raw, ignore.case=TRUE)                 ~ "DR",
+      grepl("not provided", clinsig_raw, ignore.case=TRUE)                  ~ "NP",
+      TRUE ~ "Other"
     )
 
     result$chr[i]            <- paste0("chr", safe(extras, "Chromosome"))

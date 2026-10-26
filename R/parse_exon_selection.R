@@ -47,7 +47,7 @@ filter_exons <- function(struct, exon_numbers) {
   # extraer exones con su numero de orden
   exons <- struct[struct$type == "exon", ]
   exons <- exons[order(exons$start), ]
-  exons$exon_number <- seq_len(nrow(exons))
+  exons$exon_number <- as.integer(sub("exon_", "", exons$name))
 
   # validar que los numeros pedidos existen
   max_exon <- nrow(exons)

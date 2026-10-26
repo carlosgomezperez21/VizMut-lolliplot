@@ -20,12 +20,19 @@ plot_protein_lolliplot <- function(variants,
   #---------------------------
   # ACMG colors
   #---------------------------
-  acmg_colors <- c(
-    "P"   = "#D73027",
-    "LP"  = "#FC8D59",
-    "VUS" = "#BDBDBD",
-    "LB"  = "#91BFDB",
-    "B"   = "#1A9850"
+    acmg_colors <- c(
+    "P"           = "#D73027",
+    "LP"          = "#FC8D59",
+    "P/LP"        = "#F46D43",
+    "VUS"         = "#BDBDBD",
+    "LB"          = "#91BFDB",
+    "B"           = "#1A9850",
+    "Conflicting" = "#9E66AB",
+    "RF"          = "#D9B600",
+    "DR"          = "#3288BD",
+    "NP"          = "#969696",
+    "Other"       = "#636363",
+    "NA"          = "#525252"
   )
 
   protein_length <- meta$protein$length
