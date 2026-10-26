@@ -173,17 +173,27 @@ if (opt$enrich) {
   variants <- parse_variants(variants_raw)
 }
 
+  # capturar info para log — ANTES del filtro show_only
+  log_data$enrich <- list(
+    total              = nrow(variants_raw),
+    found_clinvar      = sum(variants$clinsig != "Not found in ClinVar", na.rm=TRUE),
+    not_found_clinvar  = sum(variants$clinsig == "Not found in ClinVar", na.rm=TRUE),
+    not_found_list     = variants$hgvs_c[variants$clinsig == "Not found in ClinVar"],
+    show_only_filter   = opt$show_only,
+    after_filter       = NULL
+  )
 
-#---------------------------
-# Filtro --show_only
-#---------------------------
-if (!is.null(opt$show_only)) {
-  source("R/filter_variants.R")
-  n_before <- nrow(variants)
-  variants  <- filter_variants(variants, opt$show_only)
-  message("Filtro --show_only: ", n_before - nrow(variants),
-          " variantes excluidas, ", nrow(variants), " graficadas")
-}
+  #---------------------------
+  # Filtro --show_only
+  #---------------------------
+  if (!is.null(opt$show_only)) {
+    source("R/filter_variants.R")
+    n_before <- nrow(variants)
+    variants  <- filter_variants(variants, opt$show_only)
+    message("Filtro --show_only: ", n_before - nrow(variants),
+            " variantes excluidas, ", nrow(variants), " graficadas")
+    log_data$enrich$after_filter <- nrow(variants)
+  }
 
 # exportar CSV enriquecido si se especifica
   if (!is.null(opt$enrich_output)) {
@@ -201,16 +211,6 @@ if (!is.null(opt$show_only)) {
     message("CSV enriquecido guardado en: ", opt$enrich_output)
   }
 
-# capturar info para log
-  log_data$enrich <- list(
-    total              = nrow(variants_raw),
-    found_clinvar      = sum(variants$clinsig != "Not found in ClinVar",
-                             na.rm=TRUE),
-    not_found_clinvar  = sum(variants$clinsig == "Not found in ClinVar",
-                             na.rm=TRUE),
-    not_found_list     = variants$hgvs_c[variants$clinsig == "Not found in ClinVar"]
-  )
-
 #---------------------------
 # Deduplicacion opcional
 #---------------------------
@@ -221,7 +221,7 @@ if (opt$count) {
 }
 
 #---------------------------
-# Plot tipo: protein
+# Plot protein
 #---------------------------
 if (plot_type == "protein") {
   source("R/parse_features.R")
@@ -272,7 +272,6 @@ if (plot_type == "protein") {
 #---------------------------
 # Plot tipo: single_gene
 #---------------------------
-# en plots genomicos el default de label es cds
   if (opt$label_type == "protein") {
     message("Nota: usando label_type=cds para plot genomico")
     opt$label_type <- "cds"
@@ -404,7 +403,7 @@ p <- plot_gene_lolliplot(
 }
 
 #---------------------------
-# Plot tipo: multi_gene (Fase 3)
+# Plot tipo: multi_gene
 #---------------------------
 
 if (plot_type == "multi_gene") {

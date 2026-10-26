@@ -25,18 +25,25 @@ write_run_log <- function(log_data, log_path) {
   )
 
   # enriquecimiento
-  if (!is.null(log_data$enrich)) {
+    if (!is.null(log_data$enrich)) {
     lines <- c(lines,
       "=== Enrichment summary ===",
-      paste("Total variants:            ", log_data$enrich$total),
-      paste("Found in ClinVar:          ", log_data$enrich$found_clinvar),
-      paste("Not found in ClinVar:      ", log_data$enrich$not_found_clinvar)
+      paste("Total variants input:          ", log_data$enrich$total),
+      paste("Found in ClinVar:              ", log_data$enrich$found_clinvar),
+      paste("Not found in ClinVar:          ", log_data$enrich$not_found_clinvar)
     )
     if (length(log_data$enrich$not_found_list) > 0) {
       lines <- c(lines, "  Variants not in ClinVar:")
-      for (v in log_data$enrich$not_found_list) {
+      for (v in unique(log_data$enrich$not_found_list)) {
         lines <- c(lines, paste("    -", v))
       }
+    }
+    if (!is.null(log_data$enrich$show_only_filter)) {
+      lines <- c(lines,
+        "",
+        paste("--show_only filter applied:    ", log_data$enrich$show_only_filter),
+        paste("Variants after filter:         ", log_data$enrich$after_filter)
+      )
     }
     lines <- c(lines, "")
   }
